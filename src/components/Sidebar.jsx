@@ -6,210 +6,199 @@ import {
   FileText,
   Settings,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 import logo from "../assets/LableLens.png";
-
 import { useAuth } from "../context/AuthContext";
 
-
 function Sidebar() {
-
   const navigate = useNavigate();
-
   const { logout } = useAuth();
 
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
-
     logout();
-
     navigate("/login");
-
+    setMobileOpen(false);
   };
 
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+  };
+
+  const navItems = [
+    {
+      to: "/",
+      icon: LayoutDashboard,
+      label: "Dashboard",
+    },
+    {
+      to: "/new-inspection",
+      icon: Camera,
+      label: "New Inspection",
+    },
+    {
+      to: "/history",
+      icon: History,
+      label: "History",
+    },
+    {
+      to: "/analytics",
+      icon: BarChart3,
+      label: "Analytics",
+    },
+    {
+      to: "/reports",
+      icon: FileText,
+      label: "Reports",
+    },
+    {
+      to: "/settings",
+      icon: Settings,
+      label: "Settings",
+    },
+  ];
 
   return (
+    <>
+      {/* ================= MOBILE MENU BUTTON ================= */}
 
-    <aside className="w-64 min-h-screen bg-[#0B1220] text-white fixed left-0 top-0">
-
-      {/* ================= LOGO ================= */}
-
-      <div className="p-6 border-b border-slate-800">
-
-        <div className="flex items-center gap-3">
-
-          <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
-
-            <img
-              src={logo}
-              alt="LabelLens Logo"
-              className="w-full h-full object-contain"
-            />
-
-          </div>
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 z-50 md:hidden w-11 h-11 bg-[#0B1220] text-white rounded-xl flex items-center justify-center shadow-lg"
+        aria-label="Open menu"
+      >
+        <Menu size={22} />
+      </button>
 
 
-          <div>
+      {/* ================= MOBILE OVERLAY ================= */}
 
-            <h2 className="text-xl font-bold tracking-tight">
+      {mobileOpen && (
+        <div
+          onClick={closeMobileMenu}
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        />
+      )}
 
-              Label<span className="text-cyan-400">Lens</span>
 
-            </h2>
+      {/* ================= SIDEBAR ================= */}
+
+      <aside
+        className={`
+          w-64 min-h-screen bg-[#0B1220] text-white fixed left-0 top-0 z-50
+          transform transition-transform duration-300
+          md:translate-x-0
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+
+        {/* ================= LOGO ================= */}
+
+        <div className="p-6 border-b border-slate-800">
+
+          <div className="flex items-center justify-between">
+
+            <div className="flex items-center gap-3">
+
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
+
+                <img
+                  src={logo}
+                  alt="LabelLens Logo"
+                  className="w-full h-full object-contain"
+                />
+
+              </div>
+
+              <div>
+
+                <h2 className="text-xl font-bold tracking-tight">
+                  Label<span className="text-cyan-400">Lens</span>
+                </h2>
+
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Compliance Intelligence
+                </p>
+
+              </div>
+
+            </div>
 
 
-            <p className="text-xs text-slate-400 mt-0.5">
+            {/* Mobile close button */}
 
-              Compliance Intelligence
-
-            </p>
+            <button
+              onClick={closeMobileMenu}
+              className="md:hidden text-slate-400 hover:text-white"
+              aria-label="Close menu"
+            >
+              <X size={22} />
+            </button>
 
           </div>
 
         </div>
 
-      </div>
+
+        {/* ================= NAVIGATION ================= */}
+
+        <nav className="p-4 space-y-2">
+
+          {navItems.map((item) => {
+
+            const Icon = item.icon;
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={closeMobileMenu}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`
+                }
+              >
+                <Icon size={19} />
+
+                {item.label}
+              </NavLink>
+            );
+
+          })}
+
+        </nav>
 
 
-      {/* ================= NAVIGATION ================= */}
+        {/* ================= LOGOUT ================= */}
 
-      <nav className="p-4 space-y-2">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
 
-        <NavLink
-          to="/"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
-            }`
-          }
-        >
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+          >
 
-          <LayoutDashboard size={19} />
+            <LogOut size={19} />
 
-          Dashboard
+            Logout
 
-        </NavLink>
+          </button>
 
+        </div>
 
-        <NavLink
-          to="/new-inspection"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
-            }`
-          }
-        >
-
-          <Camera size={19} />
-
-          New Inspection
-
-        </NavLink>
-
-
-        <NavLink
-          to="/history"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
-            }`
-          }
-        >
-
-          <History size={19} />
-
-          History
-
-        </NavLink>
-
-
-        <NavLink
-          to="/analytics"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
-            }`
-          }
-        >
-
-          <BarChart3 size={19} />
-
-          Analytics
-
-        </NavLink>
-
-
-        <NavLink
-          to="/reports"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
-            }`
-          }
-        >
-
-          <FileText size={19} />
-
-          Reports
-
-        </NavLink>
-
-
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
-            }`
-          }
-        >
-
-          <Settings size={19} />
-
-          Settings
-
-        </NavLink>
-
-      </nav>
-
-
-      {/* ================= LOGOUT ================= */}
-
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
-
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
-        >
-
-          <LogOut size={19} />
-
-          Logout
-
-        </button>
-
-      </div>
-
-    </aside>
-
+      </aside>
+    </>
   );
-
 }
-
 
 export default Sidebar;

@@ -106,10 +106,10 @@ function ImageReview() {
   const currentImage = images[selectedImage];
 
   return (
-    <main className="p-6 lg:p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
+    <main className="p-4 sm:p-6 lg:p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
 
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 lg:mb-8">
 
         <button
           onClick={() => navigate("/new-inspection")}
@@ -120,11 +120,11 @@ function ImageReview() {
           Back to New Inspection
         </button>
 
-        <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
           Image Review
         </h1>
 
-        <p className="text-slate-500 mt-2">
+        <p className="text-sm sm:text-base text-slate-500 mt-2">
           Review package images before starting compliance analysis.
         </p>
 
@@ -133,16 +133,17 @@ function ImageReview() {
 
       {/* Progress */}
       <div className="bg-white border border-slate-200
-                      rounded-2xl p-5 mb-6 shadow-sm">
+                      rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto">
 
           {/* Step 1 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
 
             <div className="w-9 h-9 rounded-full
                             bg-green-500 text-white
-                            flex items-center justify-center">
+                            flex items-center justify-center
+                            shrink-0">
               ✓
             </div>
 
@@ -151,7 +152,7 @@ function ImageReview() {
                 Product Details
               </p>
 
-              <p className="text-xs text-green-600">
+              <p className="text-xs text-green-600 hidden sm:block">
                 Completed
               </p>
             </div>
@@ -159,16 +160,16 @@ function ImageReview() {
           </div>
 
 
-          <div className="h-px bg-blue-200 flex-1"></div>
+          <div className="h-px bg-blue-200 flex-1 min-w-6"></div>
 
 
           {/* Step 2 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
 
             <div className="w-9 h-9 rounded-full
                             bg-blue-600 text-white
                             flex items-center justify-center
-                            font-semibold">
+                            font-semibold shrink-0">
               2
             </div>
 
@@ -177,7 +178,7 @@ function ImageReview() {
                 Package Images
               </p>
 
-              <p className="text-xs text-blue-600">
+              <p className="text-xs text-blue-600 hidden sm:block">
                 Review images
               </p>
             </div>
@@ -185,16 +186,16 @@ function ImageReview() {
           </div>
 
 
-          <div className="h-px bg-slate-200 flex-1"></div>
+          <div className="h-px bg-slate-200 flex-1 min-w-6"></div>
 
 
           {/* Step 3 */}
-          <div className="flex items-center gap-3 opacity-50">
+          <div className="flex items-center gap-2 sm:gap-3 opacity-50 shrink-0">
 
             <div className="w-9 h-9 rounded-full
                             bg-slate-100 text-slate-500
                             flex items-center justify-center
-                            font-semibold">
+                            font-semibold shrink-0">
               3
             </div>
 
@@ -203,7 +204,7 @@ function ImageReview() {
                 Analysis
               </p>
 
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 hidden sm:block">
                 Check compliance
               </p>
             </div>
@@ -222,37 +223,45 @@ function ImageReview() {
         {/* Image Preview */}
         <section className="xl:col-span-2 bg-white
                             border border-slate-200
-                            rounded-2xl shadow-sm p-7">
+                            rounded-2xl shadow-sm
+                            p-5 sm:p-6 lg:p-7">
 
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row
+                          sm:items-center sm:justify-between
+                          gap-4 mb-6">
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
 
               <div className="w-11 h-11 rounded-xl
                               bg-blue-50 text-blue-600
-                              flex items-center justify-center">
+                              flex items-center justify-center
+                              shrink-0">
 
                 <ImageIcon size={22} />
 
               </div>
 
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
+              <div className="min-w-0">
+
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">
                   Package Image
                 </h2>
 
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 truncate">
                   {currentImage
                     ? currentImage.name
                     : "Upload package images"}
                 </p>
+
               </div>
 
             </div>
 
-            <span className="text-xs font-medium
+            <span className="self-start sm:self-auto
+                             text-xs font-medium
                              px-3 py-1.5 rounded-full
-                             bg-blue-50 text-blue-700">
+                             bg-blue-50 text-blue-700
+                             whitespace-nowrap">
 
               {images.length
                 ? `Image ${selectedImage + 1} of ${images.length}`
@@ -265,7 +274,7 @@ function ImageReview() {
 
           {/* Image Area */}
           <div className="bg-slate-100 rounded-2xl
-                          min-h-[420px]
+                          min-h-[280px] sm:min-h-[360px] lg:min-h-[420px]
                           flex items-center justify-center
                           border border-slate-200
                           overflow-hidden">
@@ -275,12 +284,13 @@ function ImageReview() {
               <img
                 src={currentImage.preview}
                 alt="Package preview"
-                className="max-h-[420px] max-w-full object-contain"
+                className="max-h-[280px] sm:max-h-[360px] lg:max-h-[420px]
+                           max-w-full object-contain"
               />
 
             ) : (
 
-              <div className="text-center">
+              <div className="text-center p-6">
 
                 <div className="w-20 h-20 rounded-2xl
                                 bg-white shadow-sm
@@ -312,14 +322,16 @@ function ImageReview() {
           {/* Image Thumbnails */}
           {images.length > 0 && (
 
-            <div className="flex gap-3 mt-5 overflow-x-auto pb-1">
+            <div className="flex gap-3 mt-5 overflow-x-auto pb-2">
 
               {images.map((image, index) => (
 
                 <button
                   key={index}
+                  type="button"
                   onClick={() => setSelectedImage(index)}
-                  className={`w-20 h-20 rounded-xl overflow-hidden
+                  className={`w-16 h-16 sm:w-20 sm:h-20
+                              rounded-xl overflow-hidden
                               border-2 flex-shrink-0 transition
                               ${
                                 selectedImage === index
@@ -365,12 +377,15 @@ function ImageReview() {
 
 
           {/* Image Controls */}
-          <div className="flex flex-wrap gap-3 mt-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2
+                          lg:flex lg:flex-wrap
+                          gap-3 mt-5">
 
             {/* Upload */}
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2
+              className="flex items-center justify-center gap-2
                          px-4 py-2.5 rounded-xl
                          bg-blue-600 text-white
                          text-sm font-medium
@@ -386,6 +401,7 @@ function ImageReview() {
 
             {/* Replace */}
             <button
+              type="button"
               onClick={() => {
                 if (!currentImage) {
                   fileInputRef.current?.click();
@@ -394,7 +410,7 @@ function ImageReview() {
 
                 replaceInputRef.current?.click();
               }}
-              className="flex items-center gap-2
+              className="flex items-center justify-center gap-2
                          px-4 py-2.5 rounded-xl
                          border border-slate-200
                          text-sm font-medium
@@ -413,8 +429,9 @@ function ImageReview() {
             {currentImage && (
 
               <button
+                type="button"
                 onClick={handleViewFullSize}
-                className="flex items-center gap-2
+                className="flex items-center justify-center gap-2
                            px-4 py-2.5 rounded-xl
                            border border-blue-200
                            text-sm font-medium
@@ -435,8 +452,9 @@ function ImageReview() {
             {currentImage && (
 
               <button
+                type="button"
                 onClick={handleDeleteImage}
-                className="flex items-center gap-2
+                className="flex items-center justify-center gap-2
                            px-4 py-2.5 rounded-xl
                            border border-red-200
                            text-sm font-medium
@@ -460,9 +478,10 @@ function ImageReview() {
         {/* Quality Panel */}
         <section className="bg-white
                             border border-slate-200
-                            rounded-2xl shadow-sm p-7">
+                            rounded-2xl shadow-sm
+                            p-5 sm:p-6 lg:p-7">
 
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900">
             Image Quality
           </h2>
 
@@ -475,11 +494,11 @@ function ImageReview() {
           <div className="mt-6 p-4 rounded-xl
                           bg-green-50 border border-green-100">
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
 
               <CheckCircle2
                 size={22}
-                className="text-green-600"
+                className="text-green-600 shrink-0"
               />
 
               <div>
@@ -502,13 +521,13 @@ function ImageReview() {
 
 
             {/* Resolution */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
 
                 <ScanText
                   size={18}
-                  className="text-slate-500"
+                  className="text-slate-500 shrink-0"
                 />
 
                 <span className="text-sm text-slate-700">
@@ -519,7 +538,7 @@ function ImageReview() {
 
               <span className="flex items-center gap-1
                                text-xs font-medium
-                               text-green-600">
+                               text-green-600 shrink-0">
 
                 <CheckCircle2 size={15} />
 
@@ -531,13 +550,13 @@ function ImageReview() {
 
 
             {/* Blur */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
 
                 <Eye
                   size={18}
-                  className="text-slate-500"
+                  className="text-slate-500 shrink-0"
                 />
 
                 <span className="text-sm text-slate-700">
@@ -548,7 +567,7 @@ function ImageReview() {
 
               <span className="flex items-center gap-1
                                text-xs font-medium
-                               text-green-600">
+                               text-green-600 shrink-0">
 
                 <CheckCircle2 size={15} />
 
@@ -560,13 +579,13 @@ function ImageReview() {
 
 
             {/* Glare */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
 
                 <Sun
                   size={18}
-                  className="text-slate-500"
+                  className="text-slate-500 shrink-0"
                 />
 
                 <span className="text-sm text-slate-700">
@@ -577,7 +596,7 @@ function ImageReview() {
 
               <span className="flex items-center gap-1
                                text-xs font-medium
-                               text-amber-600">
+                               text-amber-600 shrink-0">
 
                 <AlertTriangle size={15} />
 
@@ -589,13 +608,13 @@ function ImageReview() {
 
 
             {/* Text readability */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
 
                 <ScanText
                   size={18}
-                  className="text-slate-500"
+                  className="text-slate-500 shrink-0"
                 />
 
                 <span className="text-sm text-slate-700">
@@ -606,7 +625,7 @@ function ImageReview() {
 
               <span className="flex items-center gap-1
                                text-xs font-medium
-                               text-green-600">
+                               text-green-600 shrink-0">
 
                 <CheckCircle2 size={15} />
 
@@ -637,6 +656,7 @@ function ImageReview() {
 
           {/* Retake */}
           <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-full mt-5
                        flex items-center justify-center gap-2
@@ -658,9 +678,10 @@ function ImageReview() {
 
 
       {/* Bottom Action */}
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-stretch sm:justify-end mt-6">
 
         <button
+          type="button"
           onClick={() => {
 
             if (!images.length) {
@@ -671,7 +692,8 @@ function ImageReview() {
             navigate("/analysis");
 
           }}
-          className="flex items-center gap-2
+          className="w-full sm:w-auto
+                     flex items-center justify-center gap-2
                      bg-blue-600 hover:bg-blue-700
                      text-white font-semibold
                      px-6 py-3.5 rounded-xl

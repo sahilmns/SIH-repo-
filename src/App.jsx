@@ -4,7 +4,7 @@ import { InspectionProvider } from "./context/InspectionContext";
 import { AuthProvider } from "./context/AuthContext";
 
 import Sidebar from "./components/Sidebar";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./pages/Login";
@@ -31,7 +31,7 @@ function MainLayout({ children }) {
 
       <Sidebar />
 
-      <main className="ml-64 min-h-screen">
+      <main className="ml-0 md:ml-64 min-h-screen">
 
         <Navbar />
 

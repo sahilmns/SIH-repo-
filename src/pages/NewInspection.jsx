@@ -29,10 +29,10 @@ function NewInspection() {
   const [productUrl, setProductUrl] = useState("");
 
   return (
-    <main className="p-6 lg:p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
+    <main className="p-4 sm:p-6 lg:p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
 
       {/* Page Header */}
-      <div className="mb-8">
+      <div className="mb-6 lg:mb-8">
 
         <button
           onClick={() => navigate("/")}
@@ -43,11 +43,11 @@ function NewInspection() {
           Back to Dashboard
         </button>
 
-        <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
           New Inspection
         </h1>
 
-        <p className="text-slate-500 mt-2">
+        <p className="text-sm sm:text-base text-slate-500 mt-2">
           Start a new packaged commodity compliance inspection.
         </p>
 
@@ -56,17 +56,17 @@ function NewInspection() {
 
       {/* Progress */}
       <div className="bg-white border border-slate-200 rounded-2xl
-                      p-5 mb-6 shadow-sm">
+                      p-4 sm:p-5 mb-6 shadow-sm">
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto">
 
           {/* Step 1 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
 
             <div className="w-9 h-9 rounded-full
                             bg-blue-600 text-white
                             flex items-center justify-center
-                            font-semibold">
+                            font-semibold shrink-0">
               1
             </div>
 
@@ -75,7 +75,7 @@ function NewInspection() {
                 Product Details
               </p>
 
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 hidden sm:block">
                 Enter basic information
               </p>
             </div>
@@ -83,16 +83,16 @@ function NewInspection() {
           </div>
 
 
-          <div className="h-px bg-slate-200 flex-1"></div>
+          <div className="h-px bg-slate-200 flex-1 min-w-6"></div>
 
 
           {/* Step 2 */}
-          <div className="flex items-center gap-3 opacity-50">
+          <div className="flex items-center gap-2 sm:gap-3 opacity-50 shrink-0">
 
             <div className="w-9 h-9 rounded-full
                             bg-slate-100 text-slate-500
                             flex items-center justify-center
-                            font-semibold">
+                            font-semibold shrink-0">
               2
             </div>
 
@@ -101,7 +101,7 @@ function NewInspection() {
                 Package Images
               </p>
 
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 hidden sm:block">
                 Upload product images
               </p>
             </div>
@@ -109,16 +109,16 @@ function NewInspection() {
           </div>
 
 
-          <div className="h-px bg-slate-200 flex-1"></div>
+          <div className="h-px bg-slate-200 flex-1 min-w-6"></div>
 
 
           {/* Step 3 */}
-          <div className="flex items-center gap-3 opacity-50">
+          <div className="flex items-center gap-2 sm:gap-3 opacity-50 shrink-0">
 
             <div className="w-9 h-9 rounded-full
                             bg-slate-100 text-slate-500
                             flex items-center justify-center
-                            font-semibold">
+                            font-semibold shrink-0">
               3
             </div>
 
@@ -127,7 +127,7 @@ function NewInspection() {
                 Analysis
               </p>
 
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 hidden sm:block">
                 Check compliance
               </p>
             </div>
@@ -141,26 +141,28 @@ function NewInspection() {
 
       {/* Inspection Source */}
       <section className="bg-white border border-slate-200
-                          rounded-2xl shadow-sm p-7 mb-6">
+                          rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7 mb-6">
 
-        <div className="flex items-center gap-3 mb-5">
+        <div className="flex items-start gap-3 mb-5">
 
           <div className="w-11 h-11 rounded-xl
                           bg-blue-50 text-blue-600
-                          flex items-center justify-center">
+                          flex items-center justify-center shrink-0">
 
             <Globe size={22} />
 
           </div>
 
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">
+          <div className="min-w-0">
+
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">
               Inspection Source
             </h2>
 
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 mt-1">
               Choose how you want to provide the product information.
             </p>
+
           </div>
 
         </div>
@@ -173,17 +175,17 @@ function NewInspection() {
           <button
             type="button"
             onClick={() => setInspectionType("physical")}
-            className={`text-left p-5 rounded-2xl border-2 transition-all ${
+            className={`text-left p-4 sm:p-5 rounded-2xl border-2 transition-all ${
               inspectionType === "physical"
                 ? "border-blue-500 bg-blue-50/50"
                 : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
             }`}
           >
 
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4">
 
               <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                   inspectionType === "physical"
                     ? "bg-blue-600 text-white"
                     : "bg-slate-100 text-slate-500"
@@ -192,23 +194,23 @@ function NewInspection() {
                 <Package size={22} />
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-2">
 
                   <h3 className="font-bold text-slate-900">
                     Physical Product
                   </h3>
 
                   {inspectionType === "physical" && (
-                    <span className="text-xs font-semibold text-blue-600">
+                    <span className="text-[10px] sm:text-xs font-semibold text-blue-600 shrink-0">
                       SELECTED
                     </span>
                   )}
 
                 </div>
 
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-slate-500 mt-1 leading-relaxed">
                   Upload or capture images of the actual product package.
                 </p>
 
@@ -223,17 +225,17 @@ function NewInspection() {
           <button
             type="button"
             onClick={() => setInspectionType("online")}
-            className={`text-left p-5 rounded-2xl border-2 transition-all ${
+            className={`text-left p-4 sm:p-5 rounded-2xl border-2 transition-all ${
               inspectionType === "online"
                 ? "border-blue-500 bg-blue-50/50"
                 : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
             }`}
           >
 
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3 sm:gap-4">
 
               <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                   inspectionType === "online"
                     ? "bg-blue-600 text-white"
                     : "bg-slate-100 text-slate-500"
@@ -242,23 +244,23 @@ function NewInspection() {
                 <Globe size={22} />
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-2">
 
                   <h3 className="font-bold text-slate-900">
                     Online Product URL
                   </h3>
 
                   {inspectionType === "online" && (
-                    <span className="text-xs font-semibold text-blue-600">
+                    <span className="text-[10px] sm:text-xs font-semibold text-blue-600 shrink-0">
                       SELECTED
                     </span>
                   )}
 
                 </div>
 
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-slate-500 mt-1 leading-relaxed">
                   Enter an e-commerce product URL for online listing analysis.
                 </p>
 
@@ -302,7 +304,7 @@ function NewInspection() {
 
             </div>
 
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
               Enter the publicly accessible product page URL that you want
               Metra-X to analyze.
             </p>
@@ -320,26 +322,28 @@ function NewInspection() {
         {/* Product Details */}
         <section className="xl:col-span-2 bg-white
                             border border-slate-200
-                            rounded-2xl shadow-sm p-7">
+                            rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7">
 
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-start gap-3 mb-6">
 
             <div className="w-11 h-11 rounded-xl
                             bg-blue-50 text-blue-600
-                            flex items-center justify-center">
+                            flex items-center justify-center shrink-0">
 
               <Package size={22} />
 
             </div>
 
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">
+            <div className="min-w-0">
+
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">
                 Product Details
               </h2>
 
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 mt-1">
                 Enter the basic information of the packaged commodity.
               </p>
+
             </div>
 
           </div>
@@ -415,14 +419,12 @@ function NewInspection() {
                            focus:border-blue-500
                            focus:ring-4 focus:ring-blue-500/10"
               >
-
                 <option value="">Select category</option>
                 <option>Food & Beverages</option>
                 <option>Personal Care</option>
                 <option>Household Products</option>
                 <option>Electronics</option>
                 <option>Other</option>
-
               </select>
 
             </div>
@@ -486,7 +488,7 @@ function NewInspection() {
               className="text-blue-600 mt-0.5 flex-shrink-0"
             />
 
-            <p className="text-sm text-blue-800">
+            <p className="text-sm text-blue-800 leading-relaxed">
 
               {inspectionType === "online"
                 ? "Online product information will be used to analyze declarations displayed on the product listing."
@@ -502,26 +504,28 @@ function NewInspection() {
         {/* Physical Product Image Upload */}
         {inspectionType === "physical" && (
           <section className="bg-white border border-slate-200
-                              rounded-2xl shadow-sm p-7">
+                              rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7">
 
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-start gap-3 mb-6">
 
               <div className="w-11 h-11 rounded-xl
                               bg-cyan-50 text-cyan-600
-                              flex items-center justify-center">
+                              flex items-center justify-center shrink-0">
 
                 <ImagePlus size={22} />
 
               </div>
 
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
+              <div className="min-w-0">
+
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">
                   Package Images
                 </h2>
 
                 <p className="text-sm text-slate-500">
                   Add product images
                 </p>
+
               </div>
 
             </div>
@@ -530,7 +534,7 @@ function NewInspection() {
             {/* Upload Area */}
             <div className="border-2 border-dashed
                             border-slate-200
-                            rounded-2xl p-8
+                            rounded-2xl p-6 sm:p-8
                             text-center
                             hover:border-blue-400
                             hover:bg-blue-50/30
@@ -554,6 +558,7 @@ function NewInspection() {
               </p>
 
               <button
+                type="button"
                 className="mt-5 px-5 py-2.5 rounded-xl
                            border border-slate-200
                            text-sm font-medium
@@ -568,6 +573,7 @@ function NewInspection() {
 
             {/* Camera Button */}
             <button
+              type="button"
               className="w-full mt-4
                          flex items-center justify-center gap-2
                          px-4 py-3 rounded-xl
@@ -611,26 +617,28 @@ function NewInspection() {
         {/* Online Product Preview */}
         {inspectionType === "online" && (
           <section className="bg-white border border-slate-200
-                              rounded-2xl shadow-sm p-7">
+                              rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7">
 
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-start gap-3 mb-6">
 
               <div className="w-11 h-11 rounded-xl
                               bg-cyan-50 text-cyan-600
-                              flex items-center justify-center">
+                              flex items-center justify-center shrink-0">
 
                 <Globe size={22} />
 
               </div>
 
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
+              <div className="min-w-0">
+
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">
                   Online Listing
                 </h2>
 
                 <p className="text-sm text-slate-500">
                   Product page analysis
                 </p>
+
               </div>
 
             </div>
@@ -638,7 +646,7 @@ function NewInspection() {
 
             <div className="border-2 border-dashed
                             border-slate-200
-                            rounded-2xl p-8
+                            rounded-2xl p-6 sm:p-8
                             text-center">
 
               <div className="w-14 h-14 rounded-full
@@ -687,7 +695,7 @@ function NewInspection() {
 
 
       {/* Bottom Action */}
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-stretch sm:justify-end mt-6">
 
         <button
           onClick={() => {
@@ -709,7 +717,8 @@ function NewInspection() {
             );
 
           }}
-          className="flex items-center gap-2
+          className="w-full sm:w-auto
+                     flex items-center justify-center gap-2
                      bg-blue-600 hover:bg-blue-700
                      text-white font-semibold
                      px-6 py-3.5 rounded-xl
