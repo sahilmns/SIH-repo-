@@ -8,16 +8,20 @@ import {
   Info,
   Globe,
   Link,
+  X,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInspection } from "../context/InspectionContext";
 
 function NewInspection() {
   const navigate = useNavigate();
 
-  const { updateInspection } = useInspection();
+  const {
+    updateInspection,
+    addImages,
+  } = useInspection();
 
   const [inspectionType, setInspectionType] = useState("physical");
 
@@ -28,10 +32,204 @@ function NewInspection() {
   const [netQuantity, setNetQuantity] = useState("");
   const [productUrl, setProductUrl] = useState("");
 
+  // Camera state
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState("");
+  const [cameraReady, setCameraReady] = useState(false);
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+
+  // --------------------------------------------------
+  // CAMERA
+  // --------------------------------------------------
+
+  useEffect(() => {
+    if (!cameraOpen) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const startCamera = async () => {
+      try {
+        setCameraError("");
+        setCameraReady(false);
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setCameraError(
+            "Camera access is not supported by this browser."
+          );
+          return;
+        }
+
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: {
+                ideal: "environment",
+              },
+            },
+            audio: false,
+          });
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => {
+            track.stop();
+          });
+
+          return;
+        }
+
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+
+          videoRef.current.onloadedmetadata = () => {
+            setCameraReady(true);
+          };
+        }
+
+      } catch (error) {
+        console.error("Camera error:", error);
+
+        if (error.name === "NotAllowedError") {
+          setCameraError(
+            "Camera permission was denied. Please allow camera access and try again."
+          );
+        } else if (error.name === "NotFoundError") {
+          setCameraError(
+            "No camera was found on this device."
+          );
+        } else if (error.name === "NotReadableError") {
+          setCameraError(
+            "The camera is already being used by another application."
+          );
+        } else {
+          setCameraError(
+            "Unable to access the camera. Please check your camera permissions."
+          );
+        }
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      cancelled = true;
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => {
+          track.stop();
+        });
+
+        streamRef.current = null;
+      }
+    };
+
+  }, [cameraOpen]);
+
+
+  // Close camera
+  const closeCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      streamRef.current = null;
+    }
+
+    setCameraOpen(false);
+    setCameraError("");
+    setCameraReady(false);
+  };
+
+
+  // Capture photo
+  const capturePhoto = () => {
+    const video = videoRef.current;
+
+    if (
+      !video ||
+      !video.videoWidth ||
+      !video.videoHeight
+    ) {
+      setCameraError(
+        "Camera is not ready yet. Please wait a moment."
+      );
+
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      setCameraError(
+        "Unable to capture the image."
+      );
+
+      return;
+    }
+
+    context.drawImage(
+      video,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setCameraError(
+            "Unable to capture image."
+          );
+
+          return;
+        }
+
+        const file = new File(
+          [blob],
+          `camera-capture-${Date.now()}.jpg`,
+          {
+            type: "image/jpeg",
+          }
+        );
+
+        const imageData = {
+          file,
+          preview: URL.createObjectURL(file),
+          name: file.name,
+        };
+
+        // Add captured image to inspection
+        addImages([imageData]);
+
+        // Close camera
+        closeCamera();
+      },
+      "image/jpeg",
+      0.92
+    );
+  };
+
+
   return (
     <main className="p-4 sm:p-6 lg:p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
 
-      {/* Page Header */}
+      {/* ==================================================
+          PAGE HEADER
+      ================================================== */}
+
       <div className="mb-6 lg:mb-8">
 
         <button
@@ -54,7 +252,10 @@ function NewInspection() {
       </div>
 
 
-      {/* Progress */}
+      {/* ==================================================
+          PROGRESS
+      ================================================== */}
+
       <div className="bg-white border border-slate-200 rounded-2xl
                       p-4 sm:p-5 mb-6 shadow-sm">
 
@@ -139,7 +340,10 @@ function NewInspection() {
       </div>
 
 
-      {/* Inspection Source */}
+      {/* ==================================================
+          INSPECTION SOURCE
+      ================================================== */}
+
       <section className="bg-white border border-slate-200
                           rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7 mb-6">
 
@@ -315,11 +519,17 @@ function NewInspection() {
       </section>
 
 
-      {/* Main Grid */}
+      {/* ==================================================
+          MAIN GRID
+      ================================================== */}
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
 
-        {/* Product Details */}
+        {/* ==================================================
+            PRODUCT DETAILS
+        ================================================== */}
+
         <section className="xl:col-span-2 bg-white
                             border border-slate-200
                             rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7">
@@ -501,7 +711,10 @@ function NewInspection() {
         </section>
 
 
-        {/* Physical Product Image Upload */}
+        {/* ==================================================
+            PHYSICAL PRODUCT IMAGE UPLOAD
+        ================================================== */}
+
         {inspectionType === "physical" && (
           <section className="bg-white border border-slate-200
                               rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7">
@@ -574,6 +787,7 @@ function NewInspection() {
             {/* Camera Button */}
             <button
               type="button"
+              onClick={() => setCameraOpen(true)}
               className="w-full mt-4
                          flex items-center justify-center gap-2
                          px-4 py-3 rounded-xl
@@ -614,7 +828,10 @@ function NewInspection() {
         )}
 
 
-        {/* Online Product Preview */}
+        {/* ==================================================
+            ONLINE PRODUCT PREVIEW
+        ================================================== */}
+
         {inspectionType === "online" && (
           <section className="bg-white border border-slate-200
                               rounded-2xl shadow-sm p-5 sm:p-6 lg:p-7">
@@ -678,7 +895,7 @@ function NewInspection() {
 
               <Info
                 size={18}
-                className="text-blue-600 mt-0.5 flex-shrink-0"
+                className="text-blue-600 mt-0.5"
               />
 
               <p className="text-xs text-blue-700 leading-relaxed">
@@ -694,7 +911,10 @@ function NewInspection() {
       </div>
 
 
-      {/* Bottom Action */}
+      {/* ==================================================
+          BOTTOM ACTION
+      ================================================== */}
+
       <div className="flex justify-stretch sm:justify-end mt-6">
 
         <button
@@ -735,6 +955,156 @@ function NewInspection() {
         </button>
 
       </div>
+
+
+      {/* ==================================================
+          CAMERA MODAL
+      ================================================== */}
+
+      {cameraOpen && (
+        <div className="fixed inset-0 z-50
+                        bg-black/70
+                        flex items-center justify-center
+                        p-4">
+
+          <div className="w-full max-w-2xl
+                          bg-white
+                          rounded-2xl
+                          shadow-2xl
+                          overflow-hidden">
+
+
+            {/* Camera Header */}
+            <div className="flex items-center justify-between
+                            p-5
+                            border-b border-slate-200">
+
+              <div>
+
+                <h2 className="text-lg font-bold text-slate-900">
+                  Capture Product Image
+                </h2>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  Position the package clearly inside the camera view.
+                </p>
+
+              </div>
+
+
+              <button
+                type="button"
+                onClick={closeCamera}
+                className="w-9 h-9 rounded-full
+                           flex items-center justify-center
+                           text-slate-400
+                           hover:bg-slate-100
+                           hover:text-slate-700
+                           transition"
+                aria-label="Close camera"
+              >
+                <X size={22} />
+              </button>
+
+            </div>
+
+
+            {/* Camera Preview */}
+            <div className="bg-black
+                            aspect-video
+                            flex items-center justify-center
+                            overflow-hidden">
+
+              {cameraError ? (
+
+                <div className="text-center px-6">
+
+                  <div className="w-16 h-16
+                                  rounded-full
+                                  bg-white/10
+                                  flex items-center justify-center
+                                  mx-auto mb-4">
+
+                    <Camera
+                      size={34}
+                      className="text-white/70"
+                    />
+
+                  </div>
+
+                  <p className="text-white text-sm max-w-md">
+                    {cameraError}
+                  </p>
+
+                </div>
+
+              ) : (
+
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-contain"
+                />
+
+              )}
+
+            </div>
+
+
+            {/* Camera Controls */}
+            <div className="p-5
+                            flex flex-col sm:flex-row
+                            gap-3">
+
+              <button
+                type="button"
+                onClick={closeCamera}
+                className="flex-1
+                           px-5 py-3
+                           rounded-xl
+                           border border-slate-200
+                           text-slate-700
+                           font-medium
+                           hover:bg-slate-50
+                           transition"
+              >
+                Cancel
+              </button>
+
+
+              <button
+                type="button"
+                onClick={capturePhoto}
+                disabled={!cameraReady || !!cameraError}
+                className="flex-1
+                           px-5 py-3
+                           rounded-xl
+                           bg-blue-600
+                           hover:bg-blue-700
+                           disabled:bg-slate-300
+                           disabled:cursor-not-allowed
+                           text-white
+                           font-semibold
+                           transition
+                           flex items-center justify-center gap-2"
+              >
+
+                <Camera size={18} />
+
+                {cameraReady
+                  ? "Capture Photo"
+                  : "Starting Camera..."}
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
 
     </main>
   );
