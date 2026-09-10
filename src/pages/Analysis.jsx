@@ -1,494 +1,349 @@
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useInspection } from "../context/InspectionContext";
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Clock3,
   Loader2,
-  FileSearch,
-  ScanText,
-  ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
-
-function Analysis() {
+const Analysis = () => {
   const navigate = useNavigate();
+  const { inspection, updateInspection } = useInspection();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(0);
+
+  // Prevent duplicate API calls during React development/StrictMode
+  const hasAnalyzed = useRef(false);
+
+  useEffect(() => {
+    if (hasAnalyzed.current) {
+      return;
+    }
+
+    hasAnalyzed.current = true;
+    analyzeImage();
+  }, []);
+
+  const analyzeImage = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setProgress(10);
+
+      // Check whether an image was uploaded
+      if (!inspection.images || inspection.images.length === 0) {
+        throw new Error("No image uploaded. Please upload a label image first.");
+      }
+
+      // Get the first uploaded image
+      const imageFile = inspection.images[0].file;
+
+      if (!imageFile) {
+        throw new Error("Unable to access the uploaded image.");
+      }
+
+      setProgress(25);
+
+      // Create FormData for FastAPI
+      const formData = new FormData();
+      formData.append("file", imageFile);
+
+      setProgress(40);
+
+      // Send image to FastAPI backend
+      const response = await fetch(
+        "http://127.0.0.1:8000/analyze-label",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      setProgress(70);
+
+      // Check HTTP response
+      if (!response.ok) {
+        throw new Error(
+          `Backend analysis failed. Server returned ${response.status}.`
+        );
+      }
+
+      const result = await response.json();
+
+      console.log("Backend result:", result);
+
+      // Backend itself returned an error
+      if (result.status === "ERROR") {
+        throw new Error(result.message || "Analysis failed.");
+      }
+
+      setProgress(90);
+
+      // Save backend result in global InspectionContext
+      updateInspection({
+        analysis: result,
+        complianceResult: result,
+      });
+
+      setProgress(100);
+      setLoading(false);
+    } catch (err) {
+      console.error("Analysis error:", err);
+
+      setError(
+        err.message || "Something went wrong while analyzing the label."
+      );
+
+      setLoading(false);
+    }
+  };
+
+  const handleViewResult = () => {
+    navigate("/compliance-result");
+  };
 
   return (
-    <main className="p-4 sm:p-6 lg:p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
+    <main className="min-h-screen bg-slate-50 p-6 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">
+            Label Analysis
+          </h1>
 
-      {/* Header */}
-      <div className="mb-6 sm:mb-8">
-
-        <button
-          onClick={() => navigate("/image-review")}
-          className="flex items-center gap-2 text-sm text-slate-500
-                     hover:text-blue-600 transition-colors mb-4"
-        >
-          <ArrowLeft size={17} />
-          Back to Image Review
-        </button>
-
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-          Compliance Analysis
-        </h1>
-
-        <p className="text-sm sm:text-base text-slate-500 mt-2">
-          AI-assisted analysis of packaged commodity declarations.
-        </p>
-
-      </div>
-
-
-      {/* Progress */}
-      <div className="bg-white border border-slate-200
-                      rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
-
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-
-          {/* Step 1 */}
-          <div className="flex items-center gap-3 min-w-0">
-
-            <div className="w-9 h-9 shrink-0 rounded-full
-                            bg-green-500 text-white
-                            flex items-center justify-center">
-              ✓
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Product Details
-              </p>
-
-              <p className="text-xs text-green-600">
-                Completed
-              </p>
-            </div>
-
-          </div>
-
-
-          <div className="hidden md:block h-px bg-green-200 flex-1"></div>
-
-
-          {/* Step 2 */}
-          <div className="flex items-center gap-3 min-w-0">
-
-            <div className="w-9 h-9 shrink-0 rounded-full
-                            bg-green-500 text-white
-                            flex items-center justify-center">
-              ✓
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Package Images
-              </p>
-
-              <p className="text-xs text-green-600">
-                Completed
-              </p>
-            </div>
-
-          </div>
-
-
-          <div className="hidden md:block h-px bg-blue-200 flex-1"></div>
-
-
-          {/* Step 3 */}
-          <div className="flex items-center gap-3 min-w-0">
-
-            <div className="w-9 h-9 shrink-0 rounded-full
-                            bg-blue-600 text-white
-                            flex items-center justify-center
-                            font-semibold">
-              3
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                Analysis
-              </p>
-
-              <p className="text-xs text-blue-600">
-                Processing
-              </p>
-            </div>
-
-          </div>
-
+          <p className="text-slate-500 mt-2">
+            AI-powered analysis of your product label for Legal Metrology
+            compliance.
+          </p>
         </div>
 
-      </div>
+        {/* Error */}
+        {error && (
+          <div className="mb-6 p-5 rounded-xl bg-red-50 border border-red-200">
+            <div className="flex items-start gap-3">
+              <AlertCircle
+                size={22}
+                className="text-red-600 mt-0.5 shrink-0"
+              />
 
+              <div>
+                <p className="font-semibold text-red-700">
+                  Analysis Failed
+                </p>
 
-      {/* Analysis Status */}
-      <section className="bg-white border border-slate-200
-                          rounded-2xl shadow-sm p-5 sm:p-7 mb-6">
+                <p className="text-sm text-red-600 mt-1">
+                  {error}
+                </p>
 
-        <div className="flex flex-col sm:flex-row sm:items-center
-                        sm:justify-between gap-4">
-
-          <div className="flex items-start sm:items-center gap-4 min-w-0">
-
-            <div className="w-12 h-12 shrink-0 rounded-xl
-                            bg-blue-50 text-blue-600
-                            flex items-center justify-center">
-
-              <Loader2 size={25} className="animate-spin" />
-
+                <button
+                  onClick={() => {
+                    hasAnalyzed.current = false;
+                    analyzeImage();
+                  }}
+                  className="mt-4 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition"
+                >
+                  Try Again
+                </button>
+              </div>
             </div>
+          </div>
+        )}
 
-            <div className="min-w-0">
-
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                Analyzing Package
+        {/* Analysis Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+          {/* Uploaded Image */}
+          {inspection.images && inspection.images.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                Uploaded Label
               </h2>
 
-              <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                AI models are checking package declarations and
-                applicable compliance rules.
+              <div className="flex justify-center bg-slate-50 rounded-xl border border-slate-200 p-4">
+                <img
+                  src={inspection.images[0].preview}
+                  alt="Uploaded product label"
+                  className="max-h-72 max-w-full object-contain rounded-lg"
+                />
+              </div>
+
+              <p className="text-sm text-slate-500 mt-3 text-center">
+                {inspection.images[0].name}
               </p>
+            </div>
+          )}
 
+          {/* Analysis Status */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                {loading ? (
+                  <Loader2
+                    size={22}
+                    className="text-blue-600 animate-spin"
+                  />
+                ) : error ? (
+                  <AlertCircle
+                    size={22}
+                    className="text-red-600"
+                  />
+                ) : (
+                  <CheckCircle2
+                    size={22}
+                    className="text-green-600"
+                  />
+                )}
+
+                <div>
+                  <h2 className="font-semibold text-slate-900">
+                    {loading
+                      ? "Analyzing Label..."
+                      : error
+                      ? "Analysis Failed"
+                      : "Analysis Complete"}
+                  </h2>
+
+                  <p className="text-sm text-slate-500 mt-1">
+                    {loading
+                      ? "OCR and compliance rules are being processed."
+                      : error
+                      ? "Please check the error above and try again."
+                      : "Your label has been analyzed successfully."}
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-sm font-semibold text-slate-700">
+                {progress}%
+              </span>
             </div>
 
+            {/* Progress Bar */}
+            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
 
-          <span className="self-start sm:self-auto shrink-0
-                           px-3 py-1.5 rounded-full
-                           bg-blue-50 text-blue-700
-                           text-xs font-semibold">
-            In Progress
-          </span>
+          {/* Pipeline */}
+          <div className="space-y-4 mb-8">
+            {/* OCR */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-3">
+                {progress >= 40 ? (
+                  <CheckCircle2
+                    size={20}
+                    className="text-green-600"
+                  />
+                ) : (
+                  <Loader2
+                    size={20}
+                    className="text-blue-600 animate-spin"
+                  />
+                )}
 
+                <div>
+                  <p className="font-medium text-slate-900">
+                    OCR Text Extraction
+                  </p>
+
+                  <p className="text-xs text-slate-500">
+                    Extracting text from the product label
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-xs font-medium text-slate-500">
+                {progress >= 40 ? "Completed" : "Processing"}
+              </span>
+            </div>
+
+            {/* Rule Engine */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-3">
+                {progress >= 90 ? (
+                  <CheckCircle2
+                    size={20}
+                    className="text-green-600"
+                  />
+                ) : (
+                  <Loader2
+                    size={20}
+                    className="text-blue-600 animate-spin"
+                  />
+                )}
+
+                <div>
+                  <p className="font-medium text-slate-900">
+                    Legal Metrology Rule Engine
+                  </p>
+
+                  <p className="text-xs text-slate-500">
+                    Checking mandatory declarations
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-xs font-medium text-slate-500">
+                {progress >= 90 ? "Completed" : "Processing"}
+              </span>
+            </div>
+
+            {/* Compliance Report */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-3">
+                {progress >= 100 ? (
+                  <CheckCircle2
+                    size={20}
+                    className="text-green-600"
+                  />
+                ) : (
+                  <Loader2
+                    size={20}
+                    className="text-blue-600 animate-spin"
+                  />
+                )}
+
+                <div>
+                  <p className="font-medium text-slate-900">
+                    Compliance Report
+                  </p>
+
+                  <p className="text-xs text-slate-500">
+                    Generating the final compliance result
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-xs font-medium text-slate-500">
+                {progress >= 100 ? "Completed" : "Waiting"}
+              </span>
+            </div>
+          </div>
+
+          {/* Result Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleViewResult}
+              disabled={loading || Boolean(error)}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-medium transition hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading
+                ? "Analyzing..."
+                : "View Compliance Result"}
+
+              <ArrowRight size={19} />
+            </button>
+          </div>
         </div>
-
-
-        {/* Progress Bar */}
-        <div className="mt-7">
-
-          <div className="flex items-center justify-between mb-2">
-
-            <span className="text-sm font-medium text-slate-700">
-              Overall Analysis Progress
-            </span>
-
-            <span className="text-sm font-bold text-blue-600">
-              72%
-            </span>
-
-          </div>
-
-          <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-
-            <div
-              className="h-full bg-gradient-to-r from-blue-600 to-cyan-400
-                         rounded-full"
-              style={{ width: "72%" }}
-            ></div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* Analysis Pipeline */}
-      <section className="bg-white border border-slate-200
-                          rounded-2xl shadow-sm p-5 sm:p-7">
-
-        <div className="flex flex-col sm:flex-row sm:items-center
-                        sm:justify-between gap-3 mb-6">
-
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">
-              Analysis Pipeline
-            </h2>
-
-            <p className="text-sm text-slate-500 mt-1">
-              Processing stages for the current inspection.
-            </p>
-          </div>
-
-          <span className="text-xs text-slate-400">
-            Inspection #LL-2026-00128
-          </span>
-
-        </div>
-
-
-        <div className="space-y-4">
-
-          {/* Image Processing */}
-          <div className="flex flex-col sm:flex-row
-                          sm:items-center sm:justify-between
-                          gap-4 p-4 rounded-xl
-                          bg-green-50 border border-green-100">
-
-            <div className="flex items-center gap-4 min-w-0">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl
-                              bg-green-100 text-green-600
-                              flex items-center justify-center">
-
-                <ScanText size={20} />
-
-              </div>
-
-              <div className="min-w-0">
-
-                <p className="font-semibold text-slate-900">
-                  Image Processing
-                </p>
-
-                <p className="text-xs text-slate-500 mt-1">
-                  Package images prepared for analysis
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-center gap-2
-                            text-green-600 text-sm font-medium
-                            shrink-0">
-
-              <CheckCircle2 size={18} />
-              Completed
-
-            </div>
-
-          </div>
-
-
-          {/* OCR */}
-          <div className="flex flex-col sm:flex-row
-                          sm:items-center sm:justify-between
-                          gap-4 p-4 rounded-xl
-                          bg-green-50 border border-green-100">
-
-            <div className="flex items-center gap-4 min-w-0">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl
-                              bg-green-100 text-green-600
-                              flex items-center justify-center">
-
-                <FileSearch size={20} />
-
-              </div>
-
-              <div className="min-w-0">
-
-                <p className="font-semibold text-slate-900">
-                  OCR Extraction
-                </p>
-
-                <p className="text-xs text-slate-500 mt-1">
-                  Text and declarations extracted from package
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-center gap-2
-                            text-green-600 text-sm font-medium
-                            shrink-0">
-
-              <CheckCircle2 size={18} />
-              Completed
-
-            </div>
-
-          </div>
-
-
-          {/* Information Extraction */}
-          <div className="flex flex-col sm:flex-row
-                          sm:items-center sm:justify-between
-                          gap-4 p-4 rounded-xl
-                          bg-blue-50 border border-blue-100">
-
-            <div className="flex items-center gap-4 min-w-0">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl
-                              bg-blue-100 text-blue-600
-                              flex items-center justify-center">
-
-                <FileSearch size={20} />
-
-              </div>
-
-              <div className="min-w-0">
-
-                <p className="font-semibold text-slate-900">
-                  Information Extraction
-                </p>
-
-                <p className="text-xs text-slate-500 mt-1">
-                  Identifying mandatory package declarations
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-center gap-2
-                            text-blue-600 text-sm font-medium
-                            shrink-0">
-
-              <Loader2 size={18} className="animate-spin" />
-              Processing
-
-            </div>
-
-          </div>
-
-
-          {/* Rule Validation */}
-          <div className="flex flex-col sm:flex-row
-                          sm:items-center sm:justify-between
-                          gap-4 p-4 rounded-xl
-                          bg-slate-50 border border-slate-200">
-
-            <div className="flex items-center gap-4 min-w-0">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl
-                              bg-slate-100 text-slate-500
-                              flex items-center justify-center">
-
-                <ShieldCheck size={20} />
-
-              </div>
-
-              <div className="min-w-0">
-
-                <p className="font-semibold text-slate-700">
-                  Rule Validation
-                </p>
-
-                <p className="text-xs text-slate-400 mt-1">
-                  Checking declarations against applicable rules
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-center gap-2
-                            text-slate-400 text-sm font-medium
-                            shrink-0">
-
-              <Clock3 size={18} />
-              Waiting
-
-            </div>
-
-          </div>
-
-
-          {/* Compliance Assessment */}
-          <div className="flex flex-col sm:flex-row
-                          sm:items-center sm:justify-between
-                          gap-4 p-4 rounded-xl
-                          bg-slate-50 border border-slate-200">
-
-            <div className="flex items-center gap-4 min-w-0">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl
-                              bg-slate-100 text-slate-500
-                              flex items-center justify-center">
-
-                <ShieldCheck size={20} />
-
-              </div>
-
-              <div className="min-w-0">
-
-                <p className="font-semibold text-slate-700">
-                  Compliance Assessment
-                </p>
-
-                <p className="text-xs text-slate-400 mt-1">
-                  Generating final compliance assessment
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-center gap-2
-                            text-slate-400 text-sm font-medium
-                            shrink-0">
-
-              <Clock3 size={18} />
-              Waiting
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* AI Disclaimer */}
-      <div className="mt-6 p-4 sm:p-5 rounded-2xl
-                      bg-blue-50 border border-blue-100">
-
-        <div className="flex items-start gap-3">
-
-          <ShieldCheck
-            size={21}
-            className="text-blue-600 mt-0.5 shrink-0"
-          />
-
-          <div>
-
-            <p className="text-sm font-semibold text-blue-900">
-              AI-Assisted Analysis
-            </p>
-
-            <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-              LabelLens provides AI-assisted findings for inspection support.
-              Final compliance decisions should be verified by an
-              authorized enforcement officer.
-            </p>
-
-          </div>
-
-        </div>
-
       </div>
-
-
-      {/* Bottom Action */}
-      <div className="flex mt-6">
-
-        <button
-          onClick={() => navigate("/compliance-result")}
-          className="flex items-center justify-center gap-2
-                     bg-blue-600 hover:bg-blue-700
-                     text-white font-semibold
-                     px-6 py-3.5 rounded-xl
-                     shadow-sm hover:shadow-md
-                     transition-all
-                     w-full sm:w-auto sm:ml-auto"
-        >
-
-          View Compliance Result
-
-          <ArrowRight size={19} />
-
-        </button>
-
-      </div>
-
     </main>
   );
-}
+};
 
 export default Analysis;
