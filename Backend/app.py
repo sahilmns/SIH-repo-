@@ -17,11 +17,18 @@ app = FastAPI(
 )
 
 
+# -------------------------
+# CORS
+# -------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # Local development
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+
+        # Deployed frontend
+        "https://labellens-0xkp.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -29,40 +36,23 @@ app.add_middleware(
 )
 
 
+# Create OCR engine only once
 ocr_engine = LegalMetrologyOCREngine()
 
-@app.post("/analyze-label")
-async def analyze_label(file: UploadFile = File(...)):
 
-    # Save uploaded image temporarily
-    suffix = os.path.splitext(file.filename)[1]
-
-    with tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=suffix
-    ) as temp_file:
-
-        temp_file.write(await file.read())
-        image_path = temp_file.name
-
-    try:
-        # Step 1: OCR
-        ocr_result = ocr_engine.extract_to_json(image_path)
-
-        # Step 2: Rule Engine
-        rule_engine = LegalMetrologyRuleEngine(ocr_result)
-
-        # Step 3: Final report
-        final_report = rule_engine.generate_final_report()
-
-        return final_report
-
-    finally:
-        # Delete temporary image
-        if os.path.exists(image_path):
-            os.remove(image_path)
+# -------------------------
+# HOME
+# -------------------------
+@app.get("/")
+def home():
+    return {
+        "message": "LabelLens API is running"
+    }
 
 
+# -------------------------
+# ANALYZE LABEL
+# -------------------------
 @app.post("/analyze-label")
 async def analyze_label(file: UploadFile = File(...)):
 
@@ -76,8 +66,13 @@ async def analyze_label(file: UploadFile = File(...)):
     # Get image extension
     suffix = os.path.splitext(file.filename)[1].lower()
 
-    # Basic image format check
-    allowed_extensions = [".jpg", ".jpeg", ".png", ".webp"]
+    # Allowed image formats
+    allowed_extensions = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+    ]
 
     if suffix not in allowed_extensions:
         return {
@@ -85,7 +80,9 @@ async def analyze_label(file: UploadFile = File(...)):
             "message": "Unsupported image format"
         }
 
+    # -------------------------
     # Save image temporarily
+    # -------------------------
     with tempfile.NamedTemporaryFile(
         delete=False,
         suffix=suffix
@@ -99,19 +96,23 @@ async def analyze_label(file: UploadFile = File(...)):
         # -------------------------
         # OCR
         # -------------------------
-        ocr_result = ocr_engine.extract_to_json(image_path)
+        ocr_result = ocr_engine.extract_to_json(
+            image_path
+        )
 
         # -------------------------
         # RULE ENGINE
         # -------------------------
-        rule_engine = LegalMetrologyRuleEngine(ocr_result)
+        rule_engine = LegalMetrologyRuleEngine(
+            ocr_result
+        )
 
         # -------------------------
         # FINAL REPORT
         # -------------------------
         final_report = rule_engine.generate_final_report()
 
-        # Add uploaded filename
+        # Add original filename
         final_report["compliance_report"]["image"] = file.filename
 
         return final_report
@@ -128,11 +129,4 @@ async def analyze_label(file: UploadFile = File(...)):
         # Delete temporary image
         if os.path.exists(image_path):
             os.remove(image_path)
-
-@app.get("/")
-def home():
-    return {
-        "message": "LabelLens API is running"
-    }
-
 
