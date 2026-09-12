@@ -8,6 +8,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL;
 const Analysis = () => {
   const navigate = useNavigate();
   const { inspection, updateInspection } = useInspection();
@@ -56,7 +57,7 @@ const Analysis = () => {
 
       // Send image to FastAPI backend
       const response = await fetch(
-        "http://127.0.0.1:8000/analyze-label",
+        `${API_URL}/analyze-label`,
         {
           method: "POST",
           body: formData,
