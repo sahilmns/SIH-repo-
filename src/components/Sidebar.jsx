@@ -13,7 +13,7 @@ import {
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import logo from "../assets/LableLens.png";
+import logo from "../assets/labellogo.png";
 import { useAuth } from "../context/AuthContext";
 
 function Sidebar() {
