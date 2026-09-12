@@ -23,18 +23,14 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        # Local development
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-
-        # Deployed frontend
         "https://labellens-0xkp.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Create OCR engine only once
 ocr_engine = LegalMetrologyOCREngine()
