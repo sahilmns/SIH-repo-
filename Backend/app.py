@@ -1,0 +1,138 @@
+from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+
+from ruleengine import (
+    LegalMetrologyRuleEngine,
+    LegalMetrologyOCREngine
+)
+
+import tempfile
+import os
+
+
+app = FastAPI(
+    title="LabelLens API",
+    description="Legal Metrology Label Compliance API",
+    version="1.0"
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+ocr_engine = LegalMetrologyOCREngine()
+
+@app.post("/analyze-label")
+async def analyze_label(file: UploadFile = File(...)):
+
+    # Save uploaded image temporarily
+    suffix = os.path.splitext(file.filename)[1]
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=suffix
+    ) as temp_file:
+
+        temp_file.write(await file.read())
+        image_path = temp_file.name
+
+    try:
+        # Step 1: OCR
+        ocr_result = ocr_engine.extract_to_json(image_path)
+
+        # Step 2: Rule Engine
+        rule_engine = LegalMetrologyRuleEngine(ocr_result)
+
+        # Step 3: Final report
+        final_report = rule_engine.generate_final_report()
+
+        return final_report
+
+    finally:
+        # Delete temporary image
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+
+@app.post("/analyze-label")
+async def analyze_label(file: UploadFile = File(...)):
+
+    # Check that a file was uploaded
+    if not file.filename:
+        return {
+            "status": "ERROR",
+            "message": "No file uploaded"
+        }
+
+    # Get image extension
+    suffix = os.path.splitext(file.filename)[1].lower()
+
+    # Basic image format check
+    allowed_extensions = [".jpg", ".jpeg", ".png", ".webp"]
+
+    if suffix not in allowed_extensions:
+        return {
+            "status": "ERROR",
+            "message": "Unsupported image format"
+        }
+
+    # Save image temporarily
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=suffix
+    ) as temp_file:
+
+        temp_file.write(await file.read())
+        image_path = temp_file.name
+
+    try:
+
+        # -------------------------
+        # OCR
+        # -------------------------
+        ocr_result = ocr_engine.extract_to_json(image_path)
+
+        # -------------------------
+        # RULE ENGINE
+        # -------------------------
+        rule_engine = LegalMetrologyRuleEngine(ocr_result)
+
+        # -------------------------
+        # FINAL REPORT
+        # -------------------------
+        final_report = rule_engine.generate_final_report()
+
+        # Add uploaded filename
+        final_report["compliance_report"]["image"] = file.filename
+
+        return final_report
+
+    except Exception as e:
+
+        return {
+            "status": "ERROR",
+            "message": str(e)
+        }
+
+    finally:
+
+        # Delete temporary image
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+@app.get("/")
+def home():
+    return {
+        "message": "LabelLens API is running"
+    }
+
+
