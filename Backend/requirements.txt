@@ -3,3 +3,4 @@ opencv_contrib_python==4.10.0.84
 opencv_python==5.0.0.93
 paddleocr==3.7.0
 uvicorn==0.52.4
+paddlepaddle==3.3.1
