@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,8 +18,11 @@ const Login = () => {
       return;
     }
 
-    // Temporary navigation
-    navigate("/dashboard");
+    login({
+      email: email,
+    });
+
+    navigate("/");
   };
 
   return (
