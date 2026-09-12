@@ -1,509 +1,932 @@
-import {
-  Eye,
-  EyeOff,
-  ShieldCheck,
-  ScanLine,
-  FileCheck2,
-  BarChart3,
-  ArrowRight,
-} from "lucide-react";
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
-
-
-function Login() {
+const Login = () => {
   const navigate = useNavigate();
 
-  const { login } = useAuth();
-
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    remember: false,
-  });
-
-
-  // ==========================================
-  // HANDLE INPUT CHANGES
-  // ==========================================
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-
-  // ==========================================
-  // HANDLE LOGIN
-  // ==========================================
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    if (!formData.email || !formData.password) {
+    if (!email || !password) {
       alert("Please enter your email and password.");
       return;
     }
 
-
-    // Create user data
-    const userData = {
-      name: "Inspector",
-      email: formData.email,
-      role: "Enforcement Officer",
-    };
-
-
-    // Save user in AuthContext
-    login(userData);
-
-
-    // Go to dashboard
-    navigate("/");
+    // Temporary navigation
+    navigate("/dashboard");
   };
 
-
   return (
-    <div className="min-h-screen bg-[#F6F8FC] flex">
+    <div className="login-page">
 
+      {/* ================= BACKGROUND DECORATION ================= */}
 
-      {/* ==========================================
-          LEFT SECTION
-          ========================================== */}
+      <div className="chakra"></div>
 
-      <section className="hidden lg:flex lg:w-[48%] bg-[#0B1220] relative overflow-hidden">
+      <div className="wave wave-one"></div>
+      <div className="wave wave-two"></div>
+      <div className="wave wave-three"></div>
 
-        {/* Background effects */}
 
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-blue-600/10 blur-3xl"></div>
+      {/* ================= MAIN CONTENT ================= */}
 
-        <div className="absolute -bottom-40 -right-20 w-96 h-96 rounded-full bg-cyan-400/10 blur-3xl"></div>
+      <div className="login-content">
 
+        {/* Government Logo */}
+        <div className="government-section">
 
-        <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
-
-
-          {/* Logo */}
-
-          <div>
-
-            <div className="flex items-center gap-3">
-
-              <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/30">
-
-                <ShieldCheck
-                  size={27}
-                  className="text-white"
-                />
-
-              </div>
-
-
-              <div>
-
-                <h1 className="text-2xl font-bold text-white">
-
-                  Label
-                  <span className="text-cyan-400">
-                    Lens
-                  </span>
-
-                </h1>
-
-                <p className="text-xs text-slate-400">
-                  Compliance Intelligence
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          {/* Main content */}
-
-          <div className="max-w-lg">
-
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-medium mb-6">
-
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-
-              AI-assisted inspection platform
-
-            </div>
-
-
-            <h2 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
-
-              Smarter inspections.
-
-              <span className="block text-blue-400">
-                Better compliance.
-              </span>
-
-            </h2>
-
-
-            <p className="text-slate-400 text-base leading-7 mt-6 max-w-md">
-
-              LabelLens helps enforcement officers analyze packaged
-              commodity labels, identify potential compliance issues,
-              and generate inspection reports.
-
-            </p>
-
-
-            {/* Features */}
-
-            <div className="mt-10 space-y-5">
-
-
-              {/* Feature 1 */}
-
-              <div className="flex items-center gap-4">
-
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-
-                  <ScanLine
-                    size={19}
-                    className="text-blue-400"
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <p className="text-sm font-semibold text-white">
-                    Intelligent Label Analysis
-                  </p>
-
-                  <p className="text-xs text-slate-500 mt-1">
-                    Extract and analyze product declarations
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              {/* Feature 2 */}
-
-              <div className="flex items-center gap-4">
-
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-
-                  <FileCheck2
-                    size={19}
-                    className="text-cyan-400"
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <p className="text-sm font-semibold text-white">
-                    Rule-Based Compliance
-                  </p>
-
-                  <p className="text-xs text-slate-500 mt-1">
-                    Check mandatory packaged commodity declarations
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              {/* Feature 3 */}
-
-              <div className="flex items-center gap-4">
-
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-
-                  <BarChart3
-                    size={19}
-                    className="text-emerald-400"
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <p className="text-sm font-semibold text-white">
-                    Inspection Intelligence
-                  </p>
-
-                  <p className="text-xs text-slate-500 mt-1">
-                    Track findings, reports and inspection trends
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          {/* Footer */}
-
-          <div>
-
-            <div className="h-px bg-white/10 mb-5"></div>
-
-            <p className="text-xs text-slate-500">
-              Legal Metrology Inspection System
-            </p>
-
-          </div>
+          <img
+            src="/ministry.png"
+            alt="Department of Consumer Affairs"
+            className="ministry-logo"
+          />
 
         </div>
 
-      </section>
+
+        {/* LabelLens Branding */}
+        <div className="brand-section">
+
+          <h1 className="brand-name">
+            <span className="label">Label</span>
+            <span className="lens">Lens</span>
+          </h1>
+
+          <p className="tagline">
+            Scan Labels. Spot Violations.
+          </p>
+
+        </div>
 
 
-      {/* ==========================================
-          RIGHT SECTION
-          ========================================== */}
+        {/* ================= LOGIN CARD ================= */}
 
-      <section className="w-full lg:w-[52%] flex items-center justify-center p-6 sm:p-10">
+        <div className="login-card">
 
-        <div className="w-full max-w-md">
+          <div className="login-heading">
 
+            <h2>Login to Your Account</h2>
 
-          {/* Mobile logo */}
+            <p>
+              Access the Legal Metrology Compliance Portal
+            </p>
 
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
-
-            <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center">
-
-              <ShieldCheck
-                size={24}
-                className="text-white"
-              />
-
-            </div>
+          </div>
 
 
-            <div>
+          <form onSubmit={handleLogin}>
 
-              <h1 className="text-2xl font-bold text-slate-900">
+            {/* Email */}
+            <div className="form-group">
 
-                Label
-                <span className="text-blue-600">
-                  Lens
+              <label htmlFor="email">
+                Email Address
+              </label>
+
+              <div className="input-box">
+
+                <span className="input-icon">
+                  ✉
                 </span>
 
-              </h1>
-
-              <p className="text-xs text-slate-500">
-                Compliance Intelligence
-              </p>
-
-            </div>
-
-          </div>
-
-
-          {/* Heading */}
-
-          <div className="mb-8">
-
-            <p className="text-sm font-medium text-blue-600 mb-2">
-              INSPECTOR PORTAL
-            </p>
-
-            <h2 className="text-3xl font-bold text-slate-900">
-              Welcome back
-            </h2>
-
-            <p className="text-sm text-slate-500 mt-2">
-              Sign in to continue to your inspection dashboard.
-            </p>
-
-          </div>
-
-
-          {/* Login card */}
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-7 sm:p-8">
-
-            <form
-              onSubmit={handleLogin}
-              className="space-y-5"
-            >
-
-
-              {/* Email */}
-
-              <div>
-
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Email Address
-                </label>
-
                 <input
+                  id="email"
                   type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="inspector@example.com"
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  placeholder="Enter your email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
 
               </div>
 
-
-              {/* Password */}
-
-              <div>
-
-                <div className="flex items-center justify-between mb-2">
-
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Password
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => navigate("/forgot-password")}
-                    className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                  >
-                    Forgot password?
-                  </button>
-
-                </div>
+            </div>
 
 
-                <div className="relative">
+            {/* Password */}
+            <div className="form-group">
 
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    className="w-full px-4 py-3.5 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  />
+              <label htmlFor="password">
+                Password
+              </label>
 
+              <div className="input-box">
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassword(!showPassword)
-                    }
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
+                <span className="input-icon">
+                  🔒
+                </span>
 
-                    {showPassword ? (
-                      <EyeOff size={19} />
-                    ) : (
-                      <Eye size={19} />
-                    )}
-
-                  </button>
-
-                </div>
-
-              </div>
-
-
-              {/* Remember me */}
-
-              <div className="flex items-center justify-between">
-
-                <label className="flex items-center gap-2 cursor-pointer">
-
-                  <input
-                    type="checkbox"
-                    name="remember"
-                    checked={formData.remember}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  />
-
-                  <span className="text-sm text-slate-600">
-                    Remember me
-                  </span>
-
-                </label>
-
-              </div>
-
-
-              {/* Sign in */}
-
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
-              >
-
-                Sign In
-
-                <ArrowRight size={18} />
-
-              </button>
-
-            </form>
-
-
-            {/* Signup */}
-
-            <div className="mt-7 pt-6 border-t border-slate-100 text-center">
-
-              <p className="text-sm text-slate-500">
-
-                Don't have an account?
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
 
                 <button
-                  onClick={() => navigate("/signup")}
-                  className="ml-1.5 font-semibold text-blue-600 hover:text-blue-700"
+                  type="button"
+                  className="show-password"
+                  onClick={() =>
+                    setShowPassword(!showPassword)
+                  }
                 >
-                  Create an account
+                  {showPassword ? "◉" : "○"}
                 </button>
 
-              </p>
+              </div>
 
             </div>
 
-          </div>
+
+            {/* Login Button */}
+            <button
+              type="submit"
+              className="login-button"
+            >
+              <span>Login</span>
+              <span className="login-arrow">→</span>
+            </button>
 
 
-          {/* Security */}
+            {/* Divider */}
+            <div className="divider">
 
-          <div className="flex items-center justify-center gap-2 mt-6">
+              <span></span>
 
-            <ShieldCheck
-              size={15}
-              className="text-green-600"
-            />
+              <p>OR</p>
 
-            <span className="text-xs text-slate-500">
-              Secure access for authorized personnel
-            </span>
+              <span></span>
 
-          </div>
+            </div>
+
+
+            {/* Forgot Password */}
+            <button
+              type="button"
+              className="forgot-password"
+              onClick={() =>
+                alert("Password recovery will be available soon.")
+              }
+            >
+              Forgot Password?
+            </button>
+
+          </form>
 
         </div>
 
-      </section>
+      </div>
+
+
+      {/* ================= FOOTER ================= */}
+
+      <footer className="login-footer">
+
+        <div className="footer-left">
+          © 2026 Department of Consumer Affairs,
+          Government of India
+        </div>
+
+        <div className="footer-right">
+
+          <a href="#privacy">
+            Privacy Policy
+          </a>
+
+          <span>|</span>
+
+          <a href="#terms">
+            Terms of Use
+          </a>
+
+          <span>|</span>
+
+          <a href="#help">
+            Help
+          </a>
+
+        </div>
+
+      </footer>
+
+
+      {/* ================= STYLES ================= */}
+
+      <style>{`
+
+        * {
+          box-sizing: border-box;
+        }
+
+        html,
+        body,
+        #root {
+          margin: 0;
+          padding: 0;
+          min-height: 100%;
+          width: 100%;
+        }
+
+        body {
+          font-family:
+            "Segoe UI",
+            Arial,
+            Helvetica,
+            sans-serif;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .login-page {
+          min-height: 100vh;
+          position: relative;
+          overflow: hidden;
+
+          background: #f8fafc;
+
+          display: flex;
+          flex-direction: column;
+
+          color: #081D41;
+        }
+
+
+        /* =====================================================
+           BACKGROUND WAVES
+        ===================================================== */
+
+        .wave {
+          position: absolute;
+          left: -10%;
+          width: 120%;
+          height: 230px;
+
+          background: rgba(215, 226, 239, 0.35);
+
+          border-radius: 50% 50% 0 0;
+
+          transform: rotate(-4deg);
+
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .wave-one {
+          bottom: 55px;
+          opacity: 0.75;
+        }
+
+        .wave-two {
+          bottom: -30px;
+          opacity: 0.55;
+          transform: rotate(3deg);
+        }
+
+        .wave-three {
+          bottom: -110px;
+          opacity: 0.35;
+          transform: rotate(-2deg);
+        }
+
+
+        /* =====================================================
+           ASHOKA CHAKRA WATERMARK
+        ===================================================== */
+
+        .chakra {
+          position: absolute;
+
+          width: 390px;
+          height: 390px;
+
+          right: -105px;
+          top: 340px;
+
+          border: 18px solid rgba(193, 211, 230, 0.25);
+
+          border-radius: 50%;
+
+          pointer-events: none;
+
+          z-index: 0;
+        }
+
+        .chakra::before {
+          content: "";
+
+          position: absolute;
+
+          width: 45px;
+          height: 45px;
+
+          left: 50%;
+          top: 50%;
+
+          transform: translate(-50%, -50%);
+
+          border: 9px solid rgba(193, 211, 230, 0.25);
+
+          border-radius: 50%;
+        }
+
+        .chakra::after {
+          content: "";
+
+          position: absolute;
+
+          width: 320px;
+          height: 320px;
+
+          left: 50%;
+          top: 50%;
+
+          transform: translate(-50%, -50%);
+
+          border-radius: 50%;
+
+          background:
+            repeating-conic-gradient(
+              from 0deg,
+              rgba(193, 211, 230, 0.23) 0deg,
+              rgba(193, 211, 230, 0.23) 1.2deg,
+              transparent 1.2deg,
+              transparent 15deg
+            );
+        }
+
+
+        /* =====================================================
+           CONTENT
+        ===================================================== */
+
+        .login-content {
+          position: relative;
+
+          z-index: 2;
+
+          width: 100%;
+
+          flex: 1;
+
+          display: flex;
+          flex-direction: column;
+
+          align-items: center;
+
+          padding-top: 30px;
+          padding-bottom: 38px;
+        }
+
+
+        /* =====================================================
+           GOVERNMENT LOGO
+        ===================================================== */
+
+        .government-section {
+          width: 100%;
+
+          display: flex;
+          justify-content: center;
+
+          margin-bottom: 14px;
+        }
+
+        .ministry-logo {
+          width: 330px;
+
+          max-width: 65vw;
+
+          height: auto;
+
+          object-fit: contain;
+
+          display: block;
+        }
+
+
+        /* =====================================================
+           LABEL LENS
+        ===================================================== */
+
+        .brand-section {
+          text-align: center;
+
+          margin-bottom: 28px;
+        }
+
+        .brand-name {
+          margin: 0;
+
+          font-family:
+            Georgia,
+            "Times New Roman",
+            serif;
+
+          font-size: 48px;
+
+          line-height: 1;
+
+          font-weight: 700;
+
+          letter-spacing: -1.5px;
+        }
+
+        .label {
+          color: #081D41;
+        }
+
+        .lens {
+          color: #0070FF;
+        }
+
+        .tagline {
+          margin: 9px 0 0;
+
+          font-size: 17px;
+
+          color: #52647e;
+
+          font-weight: 400;
+
+          letter-spacing: 0.1px;
+        }
+
+
+        /* =====================================================
+           LOGIN CARD
+        ===================================================== */
+
+        .login-card {
+          width: 500px;
+
+          max-width: calc(100% - 32px);
+
+          background: rgba(255, 255, 255, 0.96);
+
+          border: 1px solid #d2dce8;
+
+          border-radius: 6px;
+
+          padding: 33px 32px 34px;
+
+          box-shadow:
+            0 5px 20px rgba(8, 29, 65, 0.09);
+        }
+
+
+        /* =====================================================
+           LOGIN HEADING
+        ===================================================== */
+
+        .login-heading {
+          text-align: center;
+
+          margin-bottom: 27px;
+        }
+
+        .login-heading h2 {
+          margin: 0 0 8px;
+
+          color: #081D41;
+
+          font-size: 25px;
+
+          line-height: 1.2;
+
+          font-weight: 650;
+        }
+
+        .login-heading p {
+          margin: 0;
+
+          color: #60718a;
+
+          font-size: 14px;
+        }
+
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .form-group {
+          margin-bottom: 21px;
+        }
+
+        .form-group label {
+          display: block;
+
+          margin-bottom: 8px;
+
+          color: #081D41;
+
+          font-size: 14px;
+
+          font-weight: 600;
+        }
+
+
+        /* =====================================================
+           INPUT
+        ===================================================== */
+
+        .input-box {
+          position: relative;
+
+          width: 100%;
+
+          display: flex;
+
+          align-items: center;
+        }
+
+        .input-box input {
+          width: 100%;
+
+          height: 47px;
+
+          border: 1px solid #c8d3e1;
+
+          border-radius: 5px;
+
+          background: #ffffff;
+
+          padding:
+            0 44px
+            0 43px;
+
+          outline: none;
+
+          color: #081D41;
+
+          font-size: 14px;
+
+          font-family: inherit;
+
+          transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .input-box input::placeholder {
+          color: #99a6b7;
+        }
+
+        .input-box input:focus {
+          border-color: #0070FF;
+
+          box-shadow:
+            0 0 0 2px rgba(0, 112, 255, 0.10);
+        }
+
+        .input-icon {
+          position: absolute;
+
+          left: 14px;
+
+          color: #60718a;
+
+          font-size: 17px;
+
+          z-index: 2;
+
+          pointer-events: none;
+        }
+
+
+        /* =====================================================
+           PASSWORD BUTTON
+        ===================================================== */
+
+        .show-password {
+          position: absolute;
+
+          right: 11px;
+
+          top: 50%;
+
+          transform: translateY(-50%);
+
+          border: none;
+
+          background: transparent;
+
+          color: #52647e;
+
+          cursor: pointer;
+
+          padding: 5px;
+
+          font-size: 15px;
+        }
+
+        .show-password:hover {
+          color: #0070FF;
+        }
+
+
+        /* =====================================================
+           LOGIN BUTTON
+        ===================================================== */
+
+        .login-button {
+          width: 100%;
+
+          height: 48px;
+
+          margin-top: 3px;
+
+          border: none;
+
+          border-radius: 5px;
+
+          background: #081D41;
+
+          color: #ffffff;
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: center;
+
+          gap: 9px;
+
+          font-family: inherit;
+
+          font-size: 15px;
+
+          font-weight: 600;
+
+          cursor: pointer;
+
+          transition:
+            background 0.15s ease;
+        }
+
+        .login-button:hover {
+          background: #102b59;
+        }
+
+        .login-arrow {
+          font-size: 19px;
+
+          line-height: 1;
+        }
+
+
+        /* =====================================================
+           OR DIVIDER
+        ===================================================== */
+
+        .divider {
+          display: flex;
+
+          align-items: center;
+
+          gap: 15px;
+
+          margin:
+            25px 0 18px;
+        }
+
+        .divider span {
+          flex: 1;
+
+          height: 1px;
+
+          background: #d7dfe9;
+        }
+
+        .divider p {
+          margin: 0;
+
+          color: #66758a;
+
+          font-size: 12px;
+
+          font-weight: 500;
+        }
+
+
+        /* =====================================================
+           FORGOT PASSWORD
+        ===================================================== */
+
+        .forgot-password {
+          display: block;
+
+          margin: auto;
+
+          border: none;
+
+          background: transparent;
+
+          color: #0070FF;
+
+          font-family: inherit;
+
+          font-size: 14px;
+
+          cursor: pointer;
+
+          padding: 2px 5px;
+        }
+
+        .forgot-password:hover {
+          text-decoration: underline;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .login-footer {
+          position: relative;
+
+          z-index: 3;
+
+          min-height: 72px;
+
+          width: 100%;
+
+          background: #081D41;
+
+          color: #ffffff;
+
+          display: flex;
+
+          align-items: center;
+        }
+
+        .login-footer {
+          padding:
+            0 6%;
+        }
+
+        .footer-left {
+          font-size: 12px;
+
+          opacity: 0.95;
+        }
+
+        .footer-right {
+          margin-left: auto;
+
+          display: flex;
+
+          align-items: center;
+
+          gap: 13px;
+
+          font-size: 12px;
+        }
+
+        .footer-right a {
+          color: #ffffff;
+
+          text-decoration: none;
+        }
+
+        .footer-right a:hover {
+          text-decoration: underline;
+        }
+
+
+        /* =====================================================
+           TABLET
+        ===================================================== */
+
+        @media (max-width: 800px) {
+
+          .login-content {
+            padding-top: 24px;
+          }
+
+          .ministry-logo {
+            width: 290px;
+          }
+
+          .brand-name {
+            font-size: 44px;
+          }
+
+          .chakra {
+            right: -180px;
+            top: 430px;
+          }
+
+          .footer-left {
+            max-width: 48%;
+          }
+
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 600px) {
+
+          .login-content {
+            padding-top: 20px;
+
+            padding-bottom: 30px;
+          }
+
+          .ministry-logo {
+            width: 270px;
+
+            max-width: 85vw;
+          }
+
+          .government-section {
+            margin-bottom: 11px;
+          }
+
+          .brand-section {
+            margin-bottom: 23px;
+          }
+
+          .brand-name {
+            font-size: 39px;
+          }
+
+          .tagline {
+            font-size: 15px;
+          }
+
+          .login-card {
+            padding:
+              28px 21px 30px;
+          }
+
+          .login-heading h2 {
+            font-size: 22px;
+          }
+
+          .login-heading p {
+            font-size: 13px;
+          }
+
+          .chakra {
+            width: 280px;
+            height: 280px;
+
+            right: -170px;
+            top: 410px;
+          }
+
+          .chakra::after {
+            width: 225px;
+            height: 225px;
+          }
+
+          .login-footer {
+            padding:
+              18px 20px;
+          }
+
+          .login-footer {
+            flex-direction: column;
+
+            justify-content: center;
+
+            gap: 11px;
+
+            text-align: center;
+          }
+
+          .footer-left {
+            max-width: 100%;
+
+            font-size: 11px;
+          }
+
+          .footer-right {
+            margin-left: 0;
+
+            flex-wrap: wrap;
+
+            justify-content: center;
+
+            font-size: 11px;
+          }
+        }
+
+      `}</style>
 
     </div>
   );
-}
+};
 
 export default Login;
