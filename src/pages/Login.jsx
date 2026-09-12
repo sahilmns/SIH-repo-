@@ -173,9 +173,7 @@ const Login = () => {
             <button
               type="button"
               className="forgot-password"
-              onClick={() =>
-                alert("Password recovery will be available soon.")
-              }
+              onClick={() => navigate("/forgot-password")
             >
               Forgot Password?
             </button>
