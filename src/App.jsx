@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import ScrollProgress from "./components/ScrollProgress";
 
 import { InspectionProvider } from "./context/InspectionContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -26,15 +29,29 @@ import Settings from "./pages/Settings";
 
 
 function MainLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#F6F8FC]">
 
-      <Sidebar />
+      {/* Scroll Progress Bar */}
+      <ScrollProgress />
 
-      <main className="ml-0 md:ml-64 min-h-screen">
+      {/* Sidebar */}
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
-        <Navbar />
+      {/* Main Content */}
+      <main className="min-h-screen">
 
+        {/* Navbar */}
+        <Navbar
+          setSidebarOpen={setSidebarOpen}
+        />
+
+        {/* Page Content */}
         {children}
 
       </main>
@@ -67,9 +84,9 @@ function App() {
 
           <Routes>
 
-            {/* ========================= */}
+            
             {/* PUBLIC AUTH ROUTES */}
-            {/* ========================= */}
+            
 
             <Route
               path="/login"
@@ -212,3 +229,4 @@ function App() {
 
 
 export default App;
+

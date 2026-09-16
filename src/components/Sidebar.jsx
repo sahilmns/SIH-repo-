@@ -6,32 +6,31 @@ import {
   FileText,
   Settings,
   LogOut,
-  Menu,
   X,
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 import logo from "../assets/labellogo.png";
 import { useAuth } from "../context/AuthContext";
 
-function Sidebar() {
+function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const [mobileOpen, setMobileOpen] = useState(false);
+  // Close sidebar
+  const closeMenu = () => {
+    setSidebarOpen(false);
+  };
 
+  // Logout
   const handleLogout = () => {
     logout();
+    setSidebarOpen(false);
     navigate("/login");
-    setMobileOpen(false);
   };
 
-  const closeMobileMenu = () => {
-    setMobileOpen(false);
-  };
-
+  // Sidebar navigation items
   const navItems = [
     {
       to: "/",
@@ -67,35 +66,34 @@ function Sidebar() {
 
   return (
     <>
-      {/* ================= MOBILE MENU BUTTON ================= */}
+      {/* ================= OVERLAY ================= */}
 
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 md:hidden w-11 h-11 bg-[#0B1220] text-white rounded-xl flex items-center justify-center shadow-lg"
-        aria-label="Open menu"
-      >
-        <Menu size={22} />
-      </button>
-
-
-      {/* ================= MOBILE OVERLAY ================= */}
-
-      {mobileOpen && (
+      {sidebarOpen && (
         <div
-          onClick={closeMobileMenu}
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={closeMenu}
+          className="fixed inset-0 bg-black/50 z-40"
+          aria-hidden="true"
         />
       )}
-
 
       {/* ================= SIDEBAR ================= */}
 
       <aside
         className={`
-          w-64 min-h-screen bg-[#0B1220] text-white fixed left-0 top-0 z-50
-          transform transition-transform duration-300
-          md:translate-x-0
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+          fixed
+          left-0
+          top-0
+          z-50
+          w-64
+          h-screen
+          bg-[#0B1220]
+          text-white
+          shadow-2xl
+          transform
+          transition-transform
+          duration-300
+          ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
 
@@ -105,9 +103,11 @@ function Sidebar() {
 
           <div className="flex items-center justify-between">
 
+            {/* Logo + Name */}
+
             <div className="flex items-center gap-3">
 
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white/5">
 
                 <img
                   src={logo}
@@ -131,15 +131,14 @@ function Sidebar() {
 
             </div>
 
-
-            {/* Mobile close button */}
+            {/* Close Button */}
 
             <button
-              onClick={closeMobileMenu}
-              className="md:hidden text-slate-400 hover:text-white"
+              onClick={closeMenu}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-200"
               aria-label="Close menu"
             >
-              <X size={22} />
+              <X size={21} />
             </button>
 
           </div>
@@ -159,21 +158,19 @@ function Sidebar() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                onClick={closeMobileMenu}
+                onClick={closeMenu}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
                   }`
                 }
               >
                 <Icon size={19} />
 
-                {item.label}
+                <span>{item.label}</span>
               </NavLink>
             );
-
           })}
 
         </nav>
@@ -187,11 +184,9 @@ function Sidebar() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
           >
-
             <LogOut size={19} />
 
-            Logout
-
+            <span>Logout</span>
           </button>
 
         </div>
