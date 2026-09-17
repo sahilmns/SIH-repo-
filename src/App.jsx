@@ -8,6 +8,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/navbar";
+import GovernmentPageHeader from "./components/GovernmentPageHeader";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./pages/Login";
@@ -15,12 +16,6 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 
 import Dashboard from "./pages/Dashboard";
-import ConsumerDashboard from "./pages/ConsumerDashboard";
-import ConsumerScan from "./pages/ConsumerScan";
-import ConsumerReportIssue from "./pages/ConsumerReportIssue";
-import ConsumerHistory from "./pages/ConsumerHistory";
-import ConsumerReports from "./pages/ConsumerReports";
-
 import NewInspection from "./pages/NewInspection";
 import ImageReview from "./pages/ImageReview";
 import OnlineProductReview from "./pages/OnlineProductReview";
@@ -34,31 +29,142 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 
 
-function MainLayout({ children }) {
+
+/* =========================================================
+   MAIN LAYOUT
+   Navbar is shown ONLY when showNavbar = true
+========================================================= */
+
+function MainLayout({ children, showNavbar = false }) {
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F6F8FC]">
+    <div className="min-h-screen bg-[#F4F7FA]">
 
       {/* Scroll Progress Bar */}
+
       <ScrollProgress />
 
+
       {/* Sidebar */}
+
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       />
 
+
       {/* Main Content */}
+
       <main className="min-h-screen">
 
-        {/* Navbar */}
-        <Navbar
-          setSidebarOpen={setSidebarOpen}
-        />
+        {/* =================================================
+            DASHBOARD HEADER
+            Only Dashboard gets the special Navbar
+        ================================================== */}
 
-        {/* Page Content */}
+        {showNavbar && (
+          <Navbar
+            setSidebarOpen={setSidebarOpen}
+          />
+        )}
+
+
+        {/* =================================================
+            INTERNAL PAGE HEADER
+            All other protected pages get this
+        ================================================== */}
+
+        {!showNavbar && (
+          <GovernmentPageHeader />
+        )}
+
+
+        {/* =================================================
+            PAGE CONTENT
+        ================================================== */}
+
         {children}
+
+
+        {/* =================================================
+            INTERNAL PAGE FOOTER
+        ================================================== */}
+
+        {!showNavbar && (
+          <footer className="
+            mt-10
+            bg-[#06345b]
+            text-white
+            border-t-4
+            border-[#ff9933]
+          ">
+
+            <div className="
+              max-w-[1500px]
+              mx-auto
+              px-5
+              lg:px-10
+              py-6
+            ">
+
+              <div className="
+                flex
+                flex-col
+                md:flex-row
+                items-center
+                justify-between
+                gap-4
+              ">
+
+                {/* Brand */}
+
+                <div className="text-center md:text-left">
+
+                  <p className="font-bold text-sm">
+                    NiyamDrishti
+                  </p>
+
+                  <p className="text-xs text-white/65 mt-1">
+                    Digital Legal Metrology Inspection Portal
+                  </p>
+
+                </div>
+
+
+                {/* Team */}
+
+                <p className="text-xs text-white/80">
+                  Made with ❤️ by Metra-X
+                </p>
+
+
+                {/* Government */}
+
+                <p className="text-xs text-white/55 text-center">
+                  Government of India • Department of Consumer Affairs
+                </p>
+
+              </div>
+
+            </div>
+
+
+            {/* Tricolour */}
+
+            <div className="flex h-[3px]">
+
+              <div className="w-1/3 bg-[#ff9933]" />
+
+              <div className="w-1/3 bg-white" />
+
+              <div className="w-1/3 bg-[#138808]" />
+
+            </div>
+
+          </footer>
+        )}
 
       </main>
 
@@ -67,16 +173,31 @@ function MainLayout({ children }) {
 }
 
 
-function ProtectedPage({ children }) {
+/* =========================================================
+   PROTECTED PAGE
+========================================================= */
+
+function ProtectedPage({ children, showNavbar = false }) {
+
   return (
+
     <ProtectedRoute>
-      <MainLayout>
+
+      <MainLayout showNavbar={showNavbar}>
+
         {children}
+
       </MainLayout>
+
     </ProtectedRoute>
+
   );
 }
 
+
+/* =========================================================
+   APP
+========================================================= */
 
 function App() {
 
@@ -90,8 +211,10 @@ function App() {
 
           <Routes>
 
-            {/* PUBLIC AUTH ROUTES */}
 
+            {/* =================================================
+                PUBLIC AUTH ROUTES
+            ================================================== */}
 
             <Route
               path="/login"
@@ -109,79 +232,24 @@ function App() {
             />
 
 
-            {/* ========================= */}
-            {/* PROTECTED APP ROUTES */}
-            {/* ========================= */}
+            {/* =================================================
+                PROTECTED APP ROUTES
+            ================================================== */}
 
-            {/* Inspector Dashboard */}
+
+            {/* ================= DASHBOARD ================= */}
+
             <Route
               path="/"
               element={
-                <ProtectedPage>
+                <ProtectedPage showNavbar={true}>
                   <Dashboard />
                 </ProtectedPage>
               }
             />
 
 
-            {/* ========================= */}
-            {/* CONSUMER ROUTES */}
-            {/* ========================= */}
-
-            {/* Consumer Dashboard */}
-            <Route
-              path="/consumer-dashboard"
-              element={
-                <ProtectedPage>
-                  <ConsumerDashboard />
-                </ProtectedPage>
-              }
-            />
-
-            {/* Consumer Scan Product */}
-            <Route
-              path="/consumer-scan"
-              element={
-                <ProtectedPage>
-                  <ConsumerScan />
-                </ProtectedPage>
-              }
-            />
-
-            {/* Consumer Report Issue */}
-            <Route
-              path="/consumer-report-issue"
-              element={
-                <ProtectedPage>
-                  <ConsumerReportIssue />
-                </ProtectedPage>
-              }
-            />
-
-            {/* Consumer My Scans */}
-            <Route
-              path="/consumer-history"
-              element={
-                <ProtectedPage>
-                  <ConsumerHistory />
-                </ProtectedPage>
-              }
-            />
-
-            {/* Consumer Reports */}
-            <Route
-              path="/consumer-reports"
-              element={
-                <ProtectedPage>
-                  <ConsumerReports />
-                </ProtectedPage>
-              }
-            />
-
-
-            {/* ========================= */}
-            {/* INSPECTOR ROUTES */}
-            {/* ========================= */}
+            {/* ================= NEW INSPECTION ================= */}
 
             <Route
               path="/new-inspection"
@@ -192,6 +260,9 @@ function App() {
               }
             />
 
+
+            {/* ================= IMAGE REVIEW ================= */}
+
             <Route
               path="/image-review"
               element={
@@ -200,6 +271,9 @@ function App() {
                 </ProtectedPage>
               }
             />
+
+
+            {/* ================= ONLINE PRODUCT REVIEW ================= */}
 
             <Route
               path="/online-product-review"
@@ -210,6 +284,9 @@ function App() {
               }
             />
 
+
+            {/* ================= ANALYSIS ================= */}
+
             <Route
               path="/analysis"
               element={
@@ -218,6 +295,9 @@ function App() {
                 </ProtectedPage>
               }
             />
+
+
+            {/* ================= COMPLIANCE RESULT ================= */}
 
             <Route
               path="/compliance-result"
@@ -228,6 +308,9 @@ function App() {
               }
             />
 
+
+            {/* ================= EVIDENCE REVIEW ================= */}
+
             <Route
               path="/evidence-review"
               element={
@@ -236,6 +319,9 @@ function App() {
                 </ProtectedPage>
               }
             />
+
+
+            {/* ================= REPORT ================= */}
 
             <Route
               path="/report"
@@ -246,6 +332,9 @@ function App() {
               }
             />
 
+
+            {/* ================= HISTORY ================= */}
+
             <Route
               path="/history"
               element={
@@ -254,6 +343,9 @@ function App() {
                 </ProtectedPage>
               }
             />
+
+
+            {/* ================= ANALYTICS ================= */}
 
             <Route
               path="/analytics"
@@ -264,6 +356,9 @@ function App() {
               }
             />
 
+
+            {/* ================= REPORTS ================= */}
+
             <Route
               path="/reports"
               element={
@@ -272,6 +367,9 @@ function App() {
                 </ProtectedPage>
               }
             />
+
+
+            {/* ================= SETTINGS ================= */}
 
             <Route
               path="/settings"
@@ -295,4 +393,3 @@ function App() {
 
 
 export default App;
-

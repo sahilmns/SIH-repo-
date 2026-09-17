@@ -4,36 +4,26 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("labellens_user");
+    const savedUser = localStorage.getItem("niyamdrishti_user");
 
     if (savedUser) {
-      try {
-        return JSON.parse(savedUser);
-      } catch (error) {
-        localStorage.removeItem("labellens_user");
-        return null;
-      }
+      return JSON.parse(savedUser);
     }
 
     return null;
   });
 
   const login = (userData) => {
-    const userWithRole = {
-      email: userData.email,
-      role: userData.role || "inspector",
-    };
-
     localStorage.setItem(
-      "labellens_user",
-      JSON.stringify(userWithRole)
+      "niyamdrishti_user",
+      JSON.stringify(userData)
     );
 
-    setUser(userWithRole);
+    setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem("labellens_user");
+    localStorage.removeItem("niyamdrishti_user");
 
     setUser(null);
   };

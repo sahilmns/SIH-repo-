@@ -146,7 +146,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
                 <img
                   src={logo}
-                  alt="LabelLens Logo"
+                  alt="NiyamDrishti Logo"
                   className="w-full h-full object-contain"
                 />
 
@@ -155,7 +155,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               <div>
 
                 <h2 className="text-xl font-bold tracking-tight">
-                  Label<span className="text-cyan-400">Lens</span>
+                  Niyam<span className="text-cyan-400">Drishti</span>
                 </h2>
 
                 <p className="text-xs text-slate-400 mt-0.5">
