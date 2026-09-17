@@ -9,7 +9,7 @@ function Navbar({ setSidebarOpen }) {
   return (
     <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8">
 
-      {/* ================= LEFT SIDE ================= */}
+      {/* = LEFT SIDE = */}
 
       <div className="flex items-center min-w-0">
 
@@ -40,7 +40,7 @@ function Navbar({ setSidebarOpen }) {
       </div>
 
 
-      {/* ================= RIGHT SIDE ================= */}
+      {/* = RIGHT SIDE = */}
 
       <div className="flex items-center gap-2 md:gap-6">
 

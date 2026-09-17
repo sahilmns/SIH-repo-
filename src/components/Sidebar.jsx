@@ -4,6 +4,7 @@ import {
   History,
   BarChart3,
   FileText,
+  MessageSquareWarning,
   Settings,
   LogOut,
   X,
@@ -16,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   // Close sidebar
   const closeMenu = () => {
@@ -30,43 +31,77 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     navigate("/login");
   };
 
-  // Sidebar navigation items
-  const navItems = [
-    {
-      to: "/",
-      icon: LayoutDashboard,
-      label: "Dashboard",
-    },
-    {
-      to: "/new-inspection",
-      icon: Camera,
-      label: "New Inspection",
-    },
-    {
-      to: "/history",
-      icon: History,
-      label: "History",
-    },
-    {
-      to: "/analytics",
-      icon: BarChart3,
-      label: "Analytics",
-    },
-    {
-      to: "/reports",
-      icon: FileText,
-      label: "Reports",
-    },
-    {
-      to: "/settings",
-      icon: Settings,
-      label: "Settings",
-    },
-  ];
+  // Role based sidebar navigation
+  const navItems =
+    user?.role === "consumer"
+      ? [
+          {
+            to: "/consumer-dashboard",
+            icon: LayoutDashboard,
+            label: "Dashboard",
+          },
+          {
+            to: "/consumer-scan",
+            icon: Camera,
+            label: "Scan Product",
+          },
+          {
+            to: "/consumer-history",
+            icon: History,
+            label: "My Scans",
+          },
+          {
+            to: "/consumer-reports",
+            icon: FileText,
+            label: "Reports",
+          },
+          {
+            to: "/consumer-report-issue",
+            icon: MessageSquareWarning,
+            label: "Report an Issue",
+          },
+          {
+            to: "/consumer-settings",
+            icon: Settings,
+            label: "Settings",
+          },
+        ]
+      : [
+          {
+            to: "/",
+            icon: LayoutDashboard,
+            label: "Dashboard",
+          },
+          {
+            to: "/new-inspection",
+            icon: Camera,
+            label: "New Inspection",
+          },
+          {
+            to: "/history",
+            icon: History,
+            label: "History",
+          },
+          {
+            to: "/analytics",
+            icon: BarChart3,
+            label: "Analytics",
+          },
+          {
+            to: "/reports",
+            icon: FileText,
+            label: "Reports",
+          },
+          {
+            to: "/settings",
+            icon: Settings,
+            label: "Settings",
+          },
+        ];
 
   return (
     <>
-      {/* ================= OVERLAY ================= */}
+      {/* OVERLAY */}
 
       {sidebarOpen && (
         <div
@@ -76,7 +111,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         />
       )}
 
-      {/* ================= SIDEBAR ================= */}
+      {/* SIDEBAR */}
 
       <aside
         className={`
@@ -97,7 +132,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         `}
       >
 
-        {/* ================= LOGO ================= */}
+        {/* LOGO */}
 
         <div className="p-6 border-b border-slate-800">
 
@@ -146,7 +181,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         </div>
 
 
-        {/* ================= NAVIGATION ================= */}
+        {/* NAVIGATION */}
 
         <nav className="p-4 space-y-2">
 
@@ -160,33 +195,39 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 to={item.to}
                 onClick={closeMenu}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
                   }`
                 }
               >
+
                 <Icon size={19} />
 
                 <span>{item.label}</span>
+
               </NavLink>
             );
+
           })}
 
         </nav>
 
 
-        {/* ================= LOGOUT ================= */}
+        {/* LOGOUT */}
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:shadow-lg hover:shadow-red-900/20 hover:translate-x-1 transition-all duration-200"
           >
+
             <LogOut size={19} />
 
             <span>Logout</span>
+
           </button>
 
         </div>

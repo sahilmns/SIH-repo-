@@ -15,6 +15,12 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 
 import Dashboard from "./pages/Dashboard";
+import ConsumerDashboard from "./pages/ConsumerDashboard";
+import ConsumerScan from "./pages/ConsumerScan";
+import ConsumerReportIssue from "./pages/ConsumerReportIssue";
+import ConsumerHistory from "./pages/ConsumerHistory";
+import ConsumerReports from "./pages/ConsumerReports";
+
 import NewInspection from "./pages/NewInspection";
 import ImageReview from "./pages/ImageReview";
 import OnlineProductReview from "./pages/OnlineProductReview";
@@ -84,9 +90,8 @@ function App() {
 
           <Routes>
 
-            
             {/* PUBLIC AUTH ROUTES */}
-            
+
 
             <Route
               path="/login"
@@ -108,6 +113,7 @@ function App() {
             {/* PROTECTED APP ROUTES */}
             {/* ========================= */}
 
+            {/* Inspector Dashboard */}
             <Route
               path="/"
               element={
@@ -116,6 +122,66 @@ function App() {
                 </ProtectedPage>
               }
             />
+
+
+            {/* ========================= */}
+            {/* CONSUMER ROUTES */}
+            {/* ========================= */}
+
+            {/* Consumer Dashboard */}
+            <Route
+              path="/consumer-dashboard"
+              element={
+                <ProtectedPage>
+                  <ConsumerDashboard />
+                </ProtectedPage>
+              }
+            />
+
+            {/* Consumer Scan Product */}
+            <Route
+              path="/consumer-scan"
+              element={
+                <ProtectedPage>
+                  <ConsumerScan />
+                </ProtectedPage>
+              }
+            />
+
+            {/* Consumer Report Issue */}
+            <Route
+              path="/consumer-report-issue"
+              element={
+                <ProtectedPage>
+                  <ConsumerReportIssue />
+                </ProtectedPage>
+              }
+            />
+
+            {/* Consumer My Scans */}
+            <Route
+              path="/consumer-history"
+              element={
+                <ProtectedPage>
+                  <ConsumerHistory />
+                </ProtectedPage>
+              }
+            />
+
+            {/* Consumer Reports */}
+            <Route
+              path="/consumer-reports"
+              element={
+                <ProtectedPage>
+                  <ConsumerReports />
+                </ProtectedPage>
+              }
+            />
+
+
+            {/* ========================= */}
+            {/* INSPECTOR ROUTES */}
+            {/* ========================= */}
 
             <Route
               path="/new-inspection"

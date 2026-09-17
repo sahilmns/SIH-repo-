@@ -9,6 +9,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState("inspector");
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -20,15 +21,20 @@ const Login = () => {
 
     login({
       email: email,
+      role: role,
     });
 
-    navigate("/");
+    if (role === "consumer") {
+      navigate("/consumer-dashboard");
+    } else {
+      navigate("/");
+    }
   };
 
   return (
     <div className="login-page">
 
-      {/* ================= BACKGROUND DECORATION ================= */}
+      {/*  BACKGROUND DECORATION  */}
 
       <div className="chakra"></div>
 
@@ -37,7 +43,7 @@ const Login = () => {
       <div className="wave wave-three"></div>
 
 
-      {/* ================= MAIN CONTENT ================= */}
+      {/*  MAIN CONTENT  */}
 
       <div className="login-content">
 
@@ -68,7 +74,7 @@ const Login = () => {
         </div>
 
 
-        {/* ================= LOGIN CARD ================= */}
+        {/*  LOGIN CARD  */}
 
         <div className="login-card">
 
@@ -85,7 +91,44 @@ const Login = () => {
 
           <form onSubmit={handleLogin}>
 
-            {/* Email */}
+            {/*  ROLE  */}
+
+            <div className="form-group">
+
+              <label htmlFor="role">
+                Login As
+              </label>
+
+              <div className="input-box">
+
+                <select
+                  id="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="role-select"
+                >
+
+                  <option value="inspector">
+                    Inspector
+                  </option>
+
+                  <option value="consumer">
+                    Consumer
+                  </option>
+
+                  <option value="manufacturer">
+                    Manufacturer
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            {/*  EMAIL  */}
+
             <div className="form-group">
 
               <label htmlFor="email">
@@ -111,7 +154,8 @@ const Login = () => {
             </div>
 
 
-            {/* Password */}
+            {/*  PASSWORD  */}
+
             <div className="form-group">
 
               <label htmlFor="password">
@@ -147,7 +191,8 @@ const Login = () => {
             </div>
 
 
-            {/* Login Button */}
+            {/*  LOGIN BUTTON  */}
+
             <button
               type="submit"
               className="login-button"
@@ -157,7 +202,8 @@ const Login = () => {
             </button>
 
 
-            {/* Divider */}
+            {/*  DIVIDER  */}
+
             <div className="divider">
 
               <span></span>
@@ -169,7 +215,8 @@ const Login = () => {
             </div>
 
 
-            {/* Forgot Password */}
+            {/*  FORGOT PASSWORD  */}
+
             <button
               type="button"
               className="forgot-password"
@@ -185,7 +232,7 @@ const Login = () => {
       </div>
 
 
-      {/* ================= FOOTER ================= */}
+      {/*  FOOTER  */}
 
       <footer className="login-footer">
 
@@ -217,7 +264,7 @@ const Login = () => {
       </footer>
 
 
-      {/* ================= STYLES ================= */}
+      {/*  STYLES  */}
 
       <style>{`
 
@@ -243,9 +290,8 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           PAGE
-        ===================================================== */
+        /* 
+           PAGE */
 
         .login-page {
           min-height: 100vh;
@@ -515,9 +561,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           FORM
-        ===================================================== */
+        /* ==== FORM */
 
         .form-group {
           margin-bottom: 21px;
@@ -536,9 +580,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           INPUT
-        ===================================================== */
+        /* ==== INPUT==== */
 
         .input-box {
           position: relative;
@@ -589,6 +631,45 @@ const Login = () => {
             0 0 0 2px rgba(0, 112, 255, 0.10);
         }
 
+
+        /* ==== ROLE SELECT==== */
+
+        .role-select {
+          width: 100%;
+
+          height: 47px;
+
+          border: 1px solid #c8d3e1;
+
+          border-radius: 5px;
+
+          background: #ffffff;
+
+          padding: 0 14px;
+
+          outline: none;
+
+          color: #081D41;
+
+          font-size: 14px;
+
+          font-family: inherit;
+
+          cursor: pointer;
+
+          transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .role-select:focus {
+          border-color: #0070FF;
+
+          box-shadow:
+            0 0 0 2px rgba(0, 112, 255, 0.10);
+        }
+
+
         .input-icon {
           position: absolute;
 
@@ -604,9 +685,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           PASSWORD BUTTON
-        ===================================================== */
+        /* ==== PASSWORD BUTTON==== */
 
         .show-password {
           position: absolute;
@@ -635,9 +714,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           LOGIN BUTTON
-        ===================================================== */
+        /* ====LOGIN BUTTON==== */
 
         .login-button {
           width: 100%;
@@ -685,9 +762,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           OR DIVIDER
-        ===================================================== */
+        /* == OR DIVIDER== */
 
         .divider {
           display: flex;
@@ -719,9 +794,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           FORGOT PASSWORD
-        ===================================================== */
+        /* == FORGOT PASSWORD== */
 
         .forgot-password {
           display: block;
@@ -748,9 +821,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           FOOTER
-        ===================================================== */
+        /* == FOOTER== */
 
         .login-footer {
           position: relative;
@@ -768,11 +839,10 @@ const Login = () => {
           display: flex;
 
           align-items: center;
-        }
 
-        .login-footer {
-          padding:
-            0 6%;
+
+
+          padding: 0 6%;
         }
 
         .footer-left {
@@ -804,9 +874,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           TABLET
-        ===================================================== */
+        /* == TABLET ==*/
 
         @media (max-width: 800px) {
 
@@ -834,9 +902,7 @@ const Login = () => {
         }
 
 
-        /* =====================================================
-           MOBILE
-        ===================================================== */
+        /* == MOBILE== */
 
         @media (max-width: 600px) {
 
@@ -924,6 +990,7 @@ const Login = () => {
 
             font-size: 11px;
           }
+
         }
 
       `}</style>
@@ -933,3 +1000,4 @@ const Login = () => {
 };
 
 export default Login;
+

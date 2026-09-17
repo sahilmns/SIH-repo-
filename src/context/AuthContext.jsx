@@ -7,19 +7,29 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem("labellens_user");
 
     if (savedUser) {
-      return JSON.parse(savedUser);
+      try {
+        return JSON.parse(savedUser);
+      } catch (error) {
+        localStorage.removeItem("labellens_user");
+        return null;
+      }
     }
 
     return null;
   });
 
   const login = (userData) => {
+    const userWithRole = {
+      email: userData.email,
+      role: userData.role || "inspector",
+    };
+
     localStorage.setItem(
       "labellens_user",
-      JSON.stringify(userData)
+      JSON.stringify(userWithRole)
     );
 
-    setUser(userData);
+    setUser(userWithRole);
   };
 
   const logout = () => {
