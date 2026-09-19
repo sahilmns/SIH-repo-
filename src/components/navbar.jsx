@@ -16,16 +16,57 @@ import {
   ClipboardCheck,
   BookOpen,
   BarChart3,
+  ArrowRight,
 } from "lucide-react";
 
+
+/* =========================================================
+   NIYAMDRISHTI LOGO
+========================================================= */
+
+function NiyamDrishtiLogo({ className = "" }) {
+  const [src, setSrc] = useState("/images/NiyamDrishti.jpeg");
+
+  const logoFiles = [
+    "/images/NiyamDrishti.jpeg",
+    "/images/NiyamDrishti.jpg",
+    "/images/NiyamDrishti.png",
+  ];
+
+  const handleError = () => {
+    const currentIndex = logoFiles.indexOf(src);
+
+    if (currentIndex < logoFiles.length - 1) {
+      setSrc(logoFiles[currentIndex + 1]);
+    }
+  };
+
+  return (
+    <img
+      src={src}
+      alt="NiyamDrishti Logo"
+      onError={handleError}
+      className={className}
+    />
+  );
+}
+
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
 function Navbar({ setSidebarOpen }) {
+
   const navigate = useNavigate();
 
   const [isScrolled, setIsScrolled] = useState(false);
 
+
   useEffect(() => {
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 120);
+      setIsScrolled(window.scrollY > 100);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -33,10 +74,14 @@ function Navbar({ setSidebarOpen }) {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
+
   }, []);
 
+
   return (
+
     <header className="relative w-full">
+
 
       {/* =====================================================
           STICKY NAVBAR
@@ -44,11 +89,19 @@ function Navbar({ setSidebarOpen }) {
 
       <div
         className={`
-          fixed top-0 left-0 right-0 z-[100]
-          bg-white/95 backdrop-blur-xl
-          border-b border-slate-200/80
-          shadow-lg
-          transition-all duration-500 ease-out
+          fixed
+          top-0
+          left-0
+          right-0
+          z-[100]
+          bg-white/95
+          backdrop-blur-md
+          border-b
+          border-slate-200
+          shadow-[0_3px_15px_rgba(0,0,0,0.08)]
+          transition-all
+          duration-500
+          ease-out
           ${
             isScrolled
               ? "translate-y-0 opacity-100"
@@ -57,51 +110,77 @@ function Navbar({ setSidebarOpen }) {
         `}
       >
 
+
         {/* Tricolour */}
 
         <div className="flex h-[3px] w-full">
+
           <div className="w-1/3 bg-[#ff9933]" />
+
           <div className="w-1/3 bg-white" />
+
           <div className="w-1/3 bg-[#138808]" />
+
         </div>
+
 
         <div className="max-w-[1500px] mx-auto px-5 lg:px-10">
 
-          <div className="h-[72px] flex items-center gap-6">
+          <div className="h-[70px] flex items-center gap-6">
 
-            {/* Logo */}
+
+            {/* LOGO + BRAND */}
 
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="flex items-center gap-3 shrink-0 text-left group"
+              className="
+                flex
+                items-center
+                gap-3
+                shrink-0
+                text-left
+                group
+              "
             >
 
               <div
                 className="
-                  w-11 h-11
-                  rounded-full
-                  bg-[#073b67]
-                  flex items-center justify-center
-                  shadow-md
-                  group-hover:shadow-lg
+                  w-10
+                  h-10
+                  rounded-lg
+                  bg-white
+                  border
+                  border-slate-200
+                  flex
+                  items-center
+                  justify-center
+                  shadow-sm
+                  overflow-hidden
                   group-hover:scale-105
-                  transition-all duration-200
+                  transition-transform
+                  duration-200
                 "
               >
-                <Scale
-                  size={23}
-                  className="text-white"
+
+                <NiyamDrishtiLogo
+                  className="
+                    w-full
+                    h-full
+                    object-contain
+                  "
                 />
+
               </div>
+
 
               <div className="hidden sm:block">
 
                 <p
                   className="
-                    text-[10px]
+                    text-[9px]
                     font-bold
-                    tracking-widest
+                    tracking-[0.15em]
                     uppercase
                     text-[#073b67]
                   "
@@ -109,8 +188,17 @@ function Navbar({ setSidebarOpen }) {
                   Department of Consumer Affairs
                 </p>
 
-                <p className="text-xl font-bold text-[#073b67]">
-                  NiyamDrishti
+
+                <p className="text-lg font-extrabold tracking-tight">
+
+                  <span className="text-[#0A4F8F]">
+                    Niyam
+                  </span>
+
+                  <span className="text-[#2D9CDB]">
+                    Drishti
+                  </span>
+
                 </p>
 
               </div>
@@ -118,17 +206,18 @@ function Navbar({ setSidebarOpen }) {
             </button>
 
 
-            {/* Sticky Search */}
+            {/* SEARCH */}
 
-            <div className="hidden md:flex flex-1 max-w-[650px] mx-auto">
+            <div className="hidden md:flex flex-1 max-w-[620px] mx-auto">
 
               <div
                 className="
                   flex
                   w-full
-                  h-11
+                  h-10
                   bg-slate-50
-                  border border-slate-300
+                  border
+                  border-slate-300
                   rounded-lg
                   overflow-hidden
                   focus-within:border-[#1769aa]
@@ -141,7 +230,7 @@ function Navbar({ setSidebarOpen }) {
                 <div className="flex items-center flex-1 px-4">
 
                   <Search
-                    size={19}
+                    size={18}
                     className="text-slate-400 mr-3"
                   />
 
@@ -160,16 +249,17 @@ function Navbar({ setSidebarOpen }) {
 
                 </div>
 
+
                 <button
                   type="button"
                   onClick={() => navigate("/history")}
                   className="
-                    px-7
+                    px-6
                     bg-[#1769aa]
-                    hover:bg-[#0b4f82]
+                    hover:bg-[#0e527f]
                     text-white
                     text-sm
-                    font-bold
+                    font-semibold
                     transition
                   "
                 >
@@ -181,53 +271,60 @@ function Navbar({ setSidebarOpen }) {
             </div>
 
 
-            {/* Right Side */}
+            {/* RIGHT SIDE */}
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-1.5 ml-auto">
 
-              {/* Accessibility */}
 
               <button
                 type="button"
                 className="
-                  hidden lg:flex
-                  items-center gap-2
-                  px-3 py-2
-                  rounded-lg
+                  hidden
+                  lg:flex
+                  items-center
+                  gap-1.5
+                  px-3
+                  py-2
+                  rounded-md
                   text-slate-700
                   hover:bg-slate-100
-                  font-semibold
+                  font-medium
                   text-sm
                   transition
                 "
               >
-                <Accessibility size={20} />
+
+                <Accessibility size={18} />
+
                 Accessibility
+
               </button>
 
-
-              {/* Help */}
 
               <button
                 type="button"
                 className="
-                  hidden lg:flex
-                  items-center gap-2
-                  px-3 py-2
-                  rounded-lg
+                  hidden
+                  lg:flex
+                  items-center
+                  gap-1.5
+                  px-3
+                  py-2
+                  rounded-md
                   text-slate-700
                   hover:bg-slate-100
-                  font-semibold
+                  font-medium
                   text-sm
                   transition
                 "
               >
-                <HelpCircle size={20} />
+
+                <HelpCircle size={18} />
+
                 Help
+
               </button>
 
-
-              {/* Notifications */}
 
               <button
                 type="button"
@@ -235,14 +332,14 @@ function Navbar({ setSidebarOpen }) {
                 className="
                   relative
                   p-2.5
-                  rounded-lg
+                  rounded-md
                   text-slate-700
                   hover:bg-slate-100
                   transition
                 "
               >
 
-                <Bell size={21} />
+                <Bell size={20} />
 
                 <span
                   className="
@@ -261,23 +358,29 @@ function Navbar({ setSidebarOpen }) {
               </button>
 
 
-              {/* User */}
+              {/* INSPECTOR */}
 
               <div className="hidden xl:flex items-center gap-2 ml-2">
 
                 <div
                   className="
-                    w-9 h-9
+                    w-9
+                    h-9
                     rounded-full
                     bg-[#edf5fa]
-                    flex items-center justify-center
+                    flex
+                    items-center
+                    justify-center
                   "
                 >
+
                   <UserCircle
-                    size={23}
+                    size={22}
                     className="text-[#073b67]"
                   />
+
                 </div>
+
 
                 <div>
 
@@ -285,11 +388,12 @@ function Navbar({ setSidebarOpen }) {
                     Inspector
                   </p>
 
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[10px] text-slate-500">
                     Enforcement Officer
                   </p>
 
                 </div>
+
 
                 <ChevronDown
                   size={15}
@@ -299,7 +403,7 @@ function Navbar({ setSidebarOpen }) {
               </div>
 
 
-              {/* Mobile Menu */}
+              {/* MOBILE */}
 
               <button
                 type="button"
@@ -308,13 +412,15 @@ function Navbar({ setSidebarOpen }) {
                 className="
                   md:hidden
                   p-2
-                  rounded-lg
+                  rounded-md
                   text-slate-700
                   hover:bg-slate-100
                   transition
                 "
               >
+
                 <Menu size={24} />
+
               </button>
 
             </div>
@@ -326,21 +432,21 @@ function Navbar({ setSidebarOpen }) {
       </div>
 
 
+
       {/* =====================================================
-          GOVERNMENT TOP BAR
+          GOVERNMENT BAR
       ====================================================== */}
 
       <div className="bg-[#06345b] text-white">
 
         <div className="max-w-[1500px] mx-auto px-5 lg:px-10">
 
-          <div className="min-h-[46px] flex items-center justify-between">
+          <div className="h-[44px] flex items-center justify-between">
 
-            {/* Government Identity */}
 
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3">
 
-              <span className="text-sm md:text-base lg:text-lg font-bold">
+              <span className="text-sm md:text-base font-bold">
                 Government of India
               </span>
 
@@ -348,59 +454,75 @@ function Navbar({ setSidebarOpen }) {
                 |
               </span>
 
-              <span className="hidden sm:inline text-sm md:text-base lg:text-lg text-white/90">
+              <span className="hidden sm:inline text-sm text-white/80">
                 Department of Consumer Affairs
               </span>
 
             </div>
 
 
-            {/* Top Links */}
-
             <div className="hidden md:flex items-center gap-5">
 
+
               <button
                 type="button"
                 className="
-                  flex items-center gap-2
-                  text-sm
-                  font-semibold
-                  hover:text-[#ffcc80]
+                  flex
+                  items-center
+                  gap-1.5
+                  text-xs
+                  font-medium
+                  text-white/90
+                  hover:text-[#8ED8FF]
                   transition
                 "
               >
-                <Accessibility size={18} />
+
+                <Accessibility size={16} />
+
                 Accessibility
+
               </button>
 
-              <span className="text-white/25">
+
+              <span className="text-white/20">
                 |
               </span>
+
 
               <button
                 type="button"
                 className="
-                  flex items-center gap-2
-                  text-sm
-                  font-semibold
-                  hover:text-[#ffcc80]
+                  flex
+                  items-center
+                  gap-1.5
+                  text-xs
+                  font-medium
+                  text-white/90
+                  hover:text-[#8ED8FF]
                   transition
                 "
               >
-                <HelpCircle size={17} />
+
+                <HelpCircle size={16} />
+
                 Help
+
               </button>
 
-              <span className="text-white/25">
+
+              <span className="text-white/20">
                 |
               </span>
+
 
               <button
                 type="button"
                 className="
-                  text-sm
-                  font-semibold
-                  hover:text-[#ffcc80]
+                  text-xs
+                  font-medium
+                  text-white/90
+                  hover:text-[#8ED8FF]
                   transition
                 "
               >
@@ -416,6 +538,7 @@ function Navbar({ setSidebarOpen }) {
       </div>
 
 
+
       {/* =====================================================
           MAIN NAVIGATION
       ====================================================== */}
@@ -423,7 +546,8 @@ function Navbar({ setSidebarOpen }) {
       <nav
         className="
           bg-white
-          border-b border-slate-200
+          border-b
+          border-slate-200
           shadow-sm
         "
       >
@@ -434,8 +558,7 @@ function Navbar({ setSidebarOpen }) {
             className="
               flex
               items-center
-              justify-start
-              h-[62px]
+              h-[60px]
               gap-7
               lg:gap-10
               overflow-x-auto
@@ -443,7 +566,6 @@ function Navbar({ setSidebarOpen }) {
             "
           >
 
-            {/* All Services */}
 
             <button
               type="button"
@@ -457,20 +579,18 @@ function Navbar({ setSidebarOpen }) {
                 text-slate-700
                 hover:text-[#073b67]
                 font-semibold
-                text-base
+                text-sm
                 whitespace-nowrap
                 transition
               "
             >
 
-              <Menu size={19} />
+              <Menu size={18} />
 
               All Services
 
             </button>
 
-
-            {/* Home */}
 
             <button
               type="button"
@@ -482,9 +602,8 @@ function Navbar({ setSidebarOpen }) {
                 h-full
                 px-2
                 text-[#073b67]
-                hover:text-[#e5232e]
                 font-bold
-                text-base
+                text-sm
                 whitespace-nowrap
                 border-b-[3px]
                 border-[#ff9933]
@@ -492,14 +611,12 @@ function Navbar({ setSidebarOpen }) {
               "
             >
 
-              <Home size={19} />
+              <Home size={18} />
 
               Home
 
             </button>
 
-
-            {/* Inspections */}
 
             <button
               type="button"
@@ -513,7 +630,7 @@ function Navbar({ setSidebarOpen }) {
                 text-slate-700
                 hover:text-[#073b67]
                 font-semibold
-                text-base
+                text-sm
                 whitespace-nowrap
                 transition
               "
@@ -526,8 +643,6 @@ function Navbar({ setSidebarOpen }) {
             </button>
 
 
-            {/* Legal Resources */}
-
             <button
               type="button"
               onClick={() => navigate("/reports")}
@@ -540,7 +655,7 @@ function Navbar({ setSidebarOpen }) {
                 text-slate-700
                 hover:text-[#073b67]
                 font-semibold
-                text-base
+                text-sm
                 whitespace-nowrap
                 transition
               "
@@ -553,8 +668,6 @@ function Navbar({ setSidebarOpen }) {
             </button>
 
 
-            {/* Reports */}
-
             <button
               type="button"
               onClick={() => navigate("/reports")}
@@ -567,7 +680,7 @@ function Navbar({ setSidebarOpen }) {
                 text-slate-700
                 hover:text-[#073b67]
                 font-semibold
-                text-base
+                text-sm
                 whitespace-nowrap
                 transition
               "
@@ -579,8 +692,6 @@ function Navbar({ setSidebarOpen }) {
 
             </button>
 
-
-            {/* Help & Support */}
 
             <button
               type="button"
@@ -594,7 +705,7 @@ function Navbar({ setSidebarOpen }) {
                 text-slate-700
                 hover:text-[#073b67]
                 font-semibold
-                text-base
+                text-sm
                 whitespace-nowrap
                 transition
               "
@@ -613,505 +724,671 @@ function Navbar({ setSidebarOpen }) {
       </nav>
 
 
-{/* =====================================================
-    HERO SECTION
-    COMPACT GLASSMORPHISM DESIGN
-====================================================== */}
 
-<section
-  className="
-    relative
-    overflow-hidden
-    min-h-[470px]
-    md:min-h-[500px]
-  "
->
-  {/* ===================================================
-      BACKGROUND IMAGE
-  ==================================================== */}
+      {/* =====================================================
+          HERO
+      ====================================================== */}
 
-  <div className="absolute inset-0">
-
-    <img
-      src="/images/inspection-4.jpeg"
-      alt="Legal Metrology inspection"
-      className="
-        absolute
-        inset-0
-        w-full
-        h-full
-        object-cover
-        object-center
-      "
-    />
-
-    {/* Very subtle dark overlay */}
-    <div className="absolute inset-0 bg-black/10" />
-
-    {/* Bottom readability */}
-    <div
-      className="
-        absolute
-        inset-0
-        bg-gradient-to-t
-        from-black/45
-        via-transparent
-        to-black/5
-      "
-    />
-
-  </div>
-
-
-  {/* ===================================================
-      HERO CONTENT
-  ==================================================== */}
-
-  <div className="relative z-10 h-full">
-
-    <div
-      className="
-        max-w-[1500px]
-        mx-auto
-        px-5
-        lg:px-10
-        py-5
-        md:py-6
-      "
-    >
-
-      {/* =================================================
-          COMPACT GLASS CARD
-      ================================================== */}
-
-      <div
+      <section
         className="
-          max-w-4xl
-          mx-auto
-          rounded-2xl
-          bg-white/[0.14]
-          backdrop-blur-sm
-          border
-          border-white/30
-          shadow-[0_20px_60px_rgba(0,0,0,0.25)]
-          px-5
-          sm:px-8
-          md:px-10
-          py-5
-          md:py-6
+          relative
+          overflow-hidden
+          h-[calc(100vh-108px)]
+          min-h-[500px]
+          max-h-[680px]
         "
       >
 
-        {/* =================================================
-            BRAND
-        ================================================== */}
 
-        <div className="flex flex-col items-center text-center">
+        {/* ===================================================
+            BACKGROUND IMAGE
+        ==================================================== */}
 
-          {/* Logo */}
+        <div className="absolute inset-0">
+
+
+          <img
+            src="/images/inspection-5.png"
+            alt="Legal Metrology inspection"
+            className="
+              absolute
+              inset-0
+              w-full
+              h-full
+              object-cover
+              object-center
+            "
+          />
+
+
+          {/* Very subtle blue atmospheric overlay */}
 
           <div
             className="
-              w-12
-              h-12
-              md:w-14
-              md:h-14
-              rounded-full
-              bg-white/95
-              flex
-              items-center
-              justify-center
-              shadow-lg
-              border
-              border-white/70
+              absolute
+              inset-0
+              bg-[#087FC1]/[0.10]
             "
-          >
-            <Scale
-              size={27}
-              className="text-[#073b67]"
-            />
-          </div>
+          />
 
 
-          {/* Department */}
-
-          <p
-            className="
-              mt-2
-              text-[9px]
-              md:text-[10px]
-              font-bold
-              tracking-[0.2em]
-              uppercase
-              text-white
-              drop-shadow-md
-            "
-          >
-            Department of Consumer Affairs
-          </p>
-
-
-          {/* Brand */}
-
-          <h1
-            className="
-              mt-0.5
-              text-2xl
-              md:text-3xl
-              lg:text-4xl
-              font-bold
-              text-white
-              tracking-tight
-              drop-shadow-lg
-            "
-          >
-            NiyamDrishti
-          </h1>
-
-
-          {/* Subtitle */}
-
-          <p
-            className="
-              mt-0.5
-              text-xs
-              md:text-sm
-              text-white/90
-              drop-shadow-md
-            "
-          >
-            Digital Legal Metrology Inspection Portal
-          </p>
-
-
-          {/* Tricolour */}
+          {/* Soft readability gradient */}
 
           <div
             className="
-              flex
-              h-[3px]
-              w-24
-              mt-2.5
-              overflow-hidden
-              rounded-full
-              shadow
+              absolute
+              inset-0
+              bg-gradient-to-b
+              from-[#06345b]/10
+              via-transparent
+              to-[#031D35]/65
             "
-          >
-            <div className="w-1/3 bg-[#ff9933]" />
-            <div className="w-1/3 bg-white" />
-            <div className="w-1/3 bg-[#138808]" />
-          </div>
+          />
+
+
+          {/* Local dark-blue glow behind central text */}
+
+          <div
+            className="
+              absolute
+              left-1/2
+              top-[8%]
+              -translate-x-1/2
+              w-[760px]
+              h-[430px]
+              rounded-full
+              bg-[#06345b]/20
+              blur-[70px]
+            "
+          />
 
         </div>
 
 
-        {/* =================================================
-            MAIN MESSAGE
-        ================================================== */}
+
+        {/* ===================================================
+            HERO CONTENT
+        ==================================================== */}
 
         <div
           className="
+            relative
+            z-10
+            h-full
             flex
-            flex-col
             items-center
-            text-center
-            mt-4
-          "
-        >
-
-          {/* Label */}
-
-          <div
-            className="
-              inline-flex
-              items-center
-              px-3
-              py-1
-              rounded-full
-              bg-white/15
-              backdrop-blur-sm
-              border
-              border-white/25
-              text-[#ffd28a]
-              text-[10px]
-              md:text-xs
-              font-bold
-              uppercase
-              tracking-[0.12em]
-              shadow-sm
-            "
-          >
-            Digital Governance
-            <span className="mx-1.5 text-white/50">•</span>
-            Legal Metrology
-          </div>
-
-
-          {/* Heading */}
-
-          <h2
-            className="
-              mt-2.5
-              text-2xl
-              md:text-3xl
-              lg:text-4xl
-              font-bold
-              text-white
-              leading-[1.15]
-              max-w-2xl
-              drop-shadow-lg
-            "
-          >
-            Smart Inspection.
-            <br />
-            Transparent Compliance.
-          </h2>
-
-
-          {/* Description */}
-
-          <p
-            className="
-              mt-2.5
-              text-xs
-              md:text-sm
-              text-white/90
-              leading-relaxed
-              max-w-xl
-              drop-shadow-md
-            "
-          >
-            AI-assisted inspection and compliance support for
-            packaged commodities, helping enforcement officers
-            review declarations and maintain digital records.
-          </p>
-
-        </div>
-
-
-        {/* =================================================
-            SEARCH
-        ================================================== */}
-
-        <div
-          className="
-            max-w-3xl
-            mx-auto
-            mt-4
+            justify-center
           "
         >
 
           <div
             className="
-              flex
-              flex-col
-              sm:flex-row
-              rounded-xl
-              overflow-hidden
-              bg-white/90
-              backdrop-blur-md
-              border
-              border-white/70
-              shadow-xl
+              w-full
+              max-w-[1050px]
+              mx-auto
+              px-5
+              pt-2
+              pb-6
+              text-center
             "
           >
 
-            {/* Input */}
 
-            <div
-              className="
-                flex-1
-                flex
-                items-center
-                px-3.5
-                py-2.5
-              "
-            >
+            {/* =================================================
+                LOGO
+            ================================================== */}
 
-              <Search
-                size={18}
+            <div className="flex justify-center mb-2">
+
+
+              <div
                 className="
-                  text-slate-500
-                  mr-2.5
-                  shrink-0
+                  w-[58px]
+                  h-[58px]
+                  md:w-[64px]
+                  md:h-[64px]
+                  rounded-[17px]
+                  bg-white
+                  p-1.5
+                  shadow-[0_8px_24px_rgba(0,35,70,0.28)]
+                  border
+                  border-white/90
+                  overflow-hidden
+                  flex
+                  items-center
+                  justify-center
                 "
-              />
+              >
 
-              <input
-                type="text"
-                placeholder="Search legal metrology services, rules and resources"
-                className="
-                  w-full
-                  outline-none
-                  bg-transparent
-                  text-slate-700
-                  text-xs
-                  md:text-sm
-                  placeholder:text-slate-500
-                "
-              />
+                <NiyamDrishtiLogo
+                  className="
+                    w-full
+                    h-full
+                    object-contain
+                    rounded-xl
+                  "
+                />
+
+              </div>
 
             </div>
 
 
-            {/* Search Button */}
 
-            <button
-              type="button"
-              onClick={() => navigate("/history")}
+            {/* =================================================
+                DEPARTMENT
+            ================================================== */}
+
+            <div
               className="
-                px-7
-                py-2.5
-                bg-[#e5232e]
-                hover:bg-[#c91d27]
-                text-white
+                flex
+                items-center
+                justify-center
+                gap-3
+                text-[9px]
+                md:text-[10px]
                 font-bold
-                text-xs
-                md:text-sm
-                transition
+                tracking-[0.20em]
+                uppercase
+                text-white
+                drop-shadow-[0_2px_5px_rgba(0,0,0,0.65)]
               "
             >
-              Search
-            </button>
+
+              <span className="w-7 h-px bg-white/65" />
+
+              Department of Consumer Affairs
+
+              <span className="w-7 h-px bg-white/65" />
+
+            </div>
+
+
+
+            {/* =================================================
+                NIYAMDRISHTI
+            ================================================== */}
+
+            <h1
+              className="
+                mt-2
+                text-[45px]
+                sm:text-[51px]
+                md:text-[60px]
+                lg:text-[68px]
+                font-black
+                tracking-[-0.045em]
+                leading-[0.95]
+                drop-shadow-[0_3px_10px_rgba(0,30,65,0.65)]
+              "
+            >
+
+              <span
+                className="
+                  text-[#EAF6FF]
+                "
+              >
+                Niyam
+              </span>
+
+              <span
+                className="
+                  text-[#38BDF8]
+                "
+              >
+                Drishti
+              </span>
+
+            </h1>
+
+
+
+            {/* =================================================
+                SUBTITLE
+            ================================================== */}
+
+            <p
+              className="
+                mt-2
+                text-sm
+                md:text-[15px]
+                font-semibold
+                text-white
+                tracking-[0.01em]
+                drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]
+              "
+            >
+              Digital Legal Metrology Inspection Portal
+            </p>
+
+
+
+            {/* =================================================
+                TRICOLOUR
+            ================================================== */}
+
+            <div
+              className="
+                flex
+                h-[3px]
+                w-[105px]
+                mt-3
+                mx-auto
+                overflow-hidden
+                rounded-full
+                shadow-[0_1px_5px_rgba(0,0,0,0.25)]
+              "
+            >
+
+              <div className="w-1/3 bg-[#ff9933]" />
+
+              <div className="w-1/3 bg-white" />
+
+              <div className="w-1/3 bg-[#138808]" />
+
+            </div>
+
+
+
+            {/* =================================================
+                SLOGAN
+            ================================================== */}
+
+            <p
+              className="
+                mt-2
+                text-xs
+                md:text-sm
+                font-bold
+                tracking-wide
+                text-white
+                drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]
+              "
+            >
+
+              Check Compliance.
+
+              <span className="text-[#7DD3FC]">
+                {" "}Build Trust.
+              </span>
+
+            </p>
+
+
+
+            {/* =================================================
+                DIGITAL GOVERNANCE
+            ================================================== */}
+
+            <div className="mt-4">
+
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  justify-center
+                  gap-2.5
+                  px-4
+                  py-1.5
+                  rounded-full
+                  bg-[#06345b]/80
+                  border
+                  border-white/30
+                  shadow-[0_5px_18px_rgba(0,25,55,0.22)]
+                  text-[9px]
+                  md:text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.15em]
+                  backdrop-blur-[2px]
+                "
+              >
+
+                <span className="text-[#7DD3FC]">
+                  Digital Governance
+                </span>
+
+                <span className="text-white/50">
+                  •
+                </span>
+
+                <span className="text-white">
+                  Legal Metrology
+                </span>
+
+              </div>
+
+
+
+              {/* =================================================
+                  MAIN HEADING
+              ================================================== */}
+
+              <h2
+                className="
+                  mt-3
+                  text-[26px]
+                  sm:text-[29px]
+                  md:text-[35px]
+                  lg:text-[39px]
+                  font-extrabold
+                  text-white
+                  leading-[1.05]
+                  tracking-[-0.025em]
+                  drop-shadow-[0_3px_8px_rgba(0,0,0,0.75)]
+                "
+              >
+
+                Smart Inspection.
+
+                <br />
+
+                Transparent{" "}
+
+                <span className="text-[#7DD3FC]">
+                  Compliance.
+                </span>
+
+              </h2>
+
+
+
+              {/* =================================================
+                  DESCRIPTION
+              ================================================== */}
+
+              <p
+                className="
+                  mt-2.5
+                  text-[10px]
+                  sm:text-[11px]
+                  md:text-xs
+                  text-white/95
+                  leading-relaxed
+                  max-w-[680px]
+                  mx-auto
+                  font-medium
+                  drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]
+                "
+              >
+                AI-assisted inspection and compliance support for packaged
+                commodities, helping enforcement officers review declarations
+                and maintain accurate digital records.
+              </p>
+
+            </div>
+
+
+
+            {/* =================================================
+                SEARCH BAR
+            ================================================== */}
+
+            <div
+              className="
+                max-w-[690px]
+                mx-auto
+                mt-3.5
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  flex-col
+                  sm:flex-row
+                  rounded-xl
+                  overflow-hidden
+                  bg-white
+                  shadow-[0_8px_25px_rgba(0,25,55,0.28)]
+                  border
+                  border-white
+                "
+              >
+
+                <div
+                  className="
+                    flex-1
+                    flex
+                    items-center
+                    px-4
+                    py-2
+                  "
+                >
+
+                  <Search
+                    size={17}
+                    className="
+                      text-[#1769aa]
+                      mr-2.5
+                      shrink-0
+                    "
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Search legal metrology services, rules and resources"
+                    className="
+                      w-full
+                      outline-none
+                      bg-transparent
+                      text-slate-700
+                      text-xs
+                      placeholder:text-slate-400
+                    "
+                  />
+
+                </div>
+
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/history")}
+                  className="
+                    sm:w-[115px]
+                    px-6
+                    py-2.5
+                    bg-[#1769aa]
+                    hover:bg-[#0e527f]
+                    text-white
+                    font-bold
+                    text-xs
+                    transition
+                    flex
+                    items-center
+                    justify-center
+                    gap-1.5
+                  "
+                >
+
+                  Search
+
+                  <ArrowRight size={14} />
+
+                </button>
+
+              </div>
+
+
+              <p
+                className="
+                  text-[8px]
+                  md:text-[9px]
+                  text-white/85
+                  mt-1
+                  drop-shadow-[0_2px_4px_rgba(0,0,0,0.75)]
+                "
+              >
+                Search rules, declarations, inspections, reports and resources
+              </p>
+
+            </div>
+
+
+
+            {/* =================================================
+                FEATURE CHIPS
+            ================================================== */}
+
+            <div
+              className="
+                flex
+                flex-wrap
+                justify-center
+                items-center
+                gap-2
+                mt-2.5
+              "
+            >
+
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-1.5
+                  px-3
+                  py-1.5
+                  rounded-full
+                  bg-[#06345b]/75
+                  border
+                  border-white/25
+                  text-[8px]
+                  md:text-[9px]
+                  text-white
+                  shadow-[0_3px_10px_rgba(0,25,55,0.20)]
+                  backdrop-blur-[2px]
+                "
+              >
+
+                <ShieldCheck
+                  size={12}
+                  className="text-[#7DD3FC]"
+                />
+
+                Evidence-based inspection
+
+              </div>
+
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-1.5
+                  px-3
+                  py-1.5
+                  rounded-full
+                  bg-[#06345b]/75
+                  border
+                  border-white/25
+                  text-[8px]
+                  md:text-[9px]
+                  text-white
+                  shadow-[0_3px_10px_rgba(0,25,55,0.20)]
+                  backdrop-blur-[2px]
+                "
+              >
+
+                <FileText
+                  size={12}
+                  className="text-[#7DD3FC]"
+                />
+
+                Digital records
+
+              </div>
+
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-1.5
+                  px-3
+                  py-1.5
+                  rounded-full
+                  bg-[#06345b]/75
+                  border
+                  border-white/25
+                  text-[8px]
+                  md:text-[9px]
+                  text-white
+                  shadow-[0_3px_10px_rgba(0,25,55,0.20)]
+                  backdrop-blur-[2px]
+                "
+              >
+
+                <Scale
+                  size={12}
+                  className="text-[#7DD3FC]"
+                />
+
+                Legal Metrology
+
+              </div>
+
+            </div>
+
+
+
+            {/* =================================================
+                TRUST LINE
+            ================================================== */}
+
+            <div
+              className="
+                mt-2
+                flex
+                items-center
+                justify-center
+                gap-2
+                text-[8px]
+                md:text-[9px]
+                text-white/70
+                uppercase
+                tracking-[0.13em]
+                font-semibold
+                drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]
+              "
+            >
+
+              <span className="w-6 h-px bg-white/30" />
+
+              Digital • Transparent • Evidence-based
+
+              <span className="w-6 h-px bg-white/30" />
+
+            </div>
+
 
           </div>
-
-
-          {/* Hint */}
-
-          <p
-            className="
-              text-[10px]
-              md:text-xs
-              text-white/80
-              mt-1.5
-              text-center
-              drop-shadow-md
-            "
-          >
-            Search for rules, declarations, inspections, reports and resources
-          </p>
 
         </div>
 
-
-        {/* =================================================
-            FEATURE CHIPS
-        ================================================== */}
-
-        <div
-          className="
-            flex
-            flex-wrap
-            justify-center
-            items-center
-            gap-2
-            mt-4
-          "
-        >
-
-          {/* Evidence */}
-
-          <div
-            className="
-              flex
-              items-center
-              gap-1.5
-              px-3
-              py-1.5
-              rounded-full
-              bg-black/20
-              backdrop-blur-md
-              border
-              border-white/25
-              text-[10px]
-              md:text-xs
-              text-white
-              hover:bg-white/20
-              transition
-            "
-          >
-            <ShieldCheck size={13} />
-            Evidence-based inspection
-          </div>
+      </section>
 
 
-          {/* Digital Records */}
 
-          <div
-            className="
-              flex
-              items-center
-              gap-1.5
-              px-3
-              py-1.5
-              rounded-full
-              bg-black/20
-              backdrop-blur-md
-              border
-              border-white/25
-              text-[10px]
-              md:text-xs
-              text-white
-              hover:bg-white/20
-              transition
-            "
-          >
-            <FileText size={13} />
-            Digital records
-          </div>
+      {/* =====================================================
+          BOTTOM TRICOLOUR
+      ====================================================== */}
 
+      <div className="flex h-[4px] w-full">
 
-          {/* Legal Metrology */}
+        <div className="w-1/3 bg-[#ff9933]" />
 
-          <div
-            className="
-              flex
-              items-center
-              gap-1.5
-              px-3
-              py-1.5
-              rounded-full
-              bg-black/20
-              backdrop-blur-md
-              border
-              border-white/25
-              text-[10px]
-              md:text-xs
-              text-white
-              hover:bg-white/20
-              transition
-            "
-          >
-            <Scale size={13} />
-            Legal Metrology
-          </div>
+        <div className="w-1/3 bg-white" />
 
-        </div>
+        <div className="w-1/3 bg-[#138808]" />
 
       </div>
 
-    </div>
-
-  </div>
-
-</section>
-
-
-{/* =====================================================
-    BOTTOM TRICOLOUR
-====================================================== */}
-
-<div className="flex h-[4px] w-full">
-
-  <div className="w-1/3 bg-[#ff9933]" />
-  <div className="w-1/3 bg-white" />
-  <div className="w-1/3 bg-[#138808]" />
-
-</div>
 
     </header>
   );
 }
 
 export default Navbar;
+
