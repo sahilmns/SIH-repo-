@@ -1401,7 +1401,7 @@ function Navbar({ setSidebarOpen }) {
             <button
               type="button"
               onClick={() =>
-                navigate("/new-inspection")
+                navigate("/login")
               }
               className="
                 ml-auto
