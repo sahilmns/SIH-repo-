@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Menu } from "lucide-react";
 
 import ScrollProgress from "./components/ScrollProgress";
 
@@ -32,8 +33,8 @@ import Settings from "./pages/Settings";
 
 /* =========================================================
    MAIN LAYOUT
-   Navbar is shown ONLY when showNavbar = true
-========================================================= */
+
+   ========================================================= */
 
 function MainLayout({ children, showNavbar = false }) {
 
@@ -42,12 +43,16 @@ function MainLayout({ children, showNavbar = false }) {
   return (
     <div className="min-h-screen bg-[#F4F7FA]">
 
-      {/* Scroll Progress Bar */}
+      {/* =================================================
+          SCROLL PROGRESS BAR
+      ================================================== */}
 
       <ScrollProgress />
 
 
-      {/* Sidebar */}
+      {/* =================================================
+          SIDEBAR
+      ================================================== */}
 
       <Sidebar
         sidebarOpen={sidebarOpen}
@@ -55,13 +60,19 @@ function MainLayout({ children, showNavbar = false }) {
       />
 
 
-      {/* Main Content */}
+      {/* =================================================
+          MAIN CONTENT
+      ================================================== */}
 
       <main className="min-h-screen">
 
+
         {/* =================================================
-            DASHBOARD HEADER
-            Only Dashboard gets the special Navbar
+            HOME / DASHBOARD NAVBAR
+
+            IMPORTANT:
+            Home page is NOT changed.
+            Existing Navbar remains exactly as before.
         ================================================== */}
 
         {showNavbar && (
@@ -73,11 +84,70 @@ function MainLayout({ children, showNavbar = false }) {
 
         {/* =================================================
             INTERNAL PAGE HEADER
-            All other protected pages get this
+
+            IMPORTANT:
+            Only internal pages get this menu button.
+
+            Home page does NOT get this button.
         ================================================== */}
 
         {!showNavbar && (
-          <GovernmentPageHeader />
+          <div className="relative">
+
+            {/* Existing Government Header */}
+            <GovernmentPageHeader />
+
+
+            {/* =================================================
+                PERMANENT MENU BUTTON
+
+                It is positioned INSIDE the blue
+                Government of India strip.
+
+                It will appear on:
+                - New Inspection
+                - Image Review
+                - Online Product Review
+                - Analysis
+                - Compliance Result
+                - Evidence Review
+                - Report
+                - History
+                - Analytics
+                - Reports
+                - Settings
+            ================================================== */}
+
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+              title="Open menu"
+              className="
+                absolute
+                top-0
+                left-3
+                z-[100]
+                flex
+                items-center
+                justify-center
+                w-10
+                h-[44px]
+                text-white
+                hover:bg-white/10
+                transition-colors
+                duration-200
+              "
+            >
+
+              <Menu
+                size={24}
+                strokeWidth={2}
+              />
+
+            </button>
+
+          </div>
         )}
 
 
@@ -93,32 +163,40 @@ function MainLayout({ children, showNavbar = false }) {
         ================================================== */}
 
         {!showNavbar && (
-          <footer className="
-            mt-10
-            bg-[#06345b]
-            text-white
-            border-t-4
-            border-[#ff9933]
-          ">
+          <footer
+            className="
+              mt-10
+              bg-[#06345b]
+              text-white
+              border-t-4
+              border-[#ff9933]
+            "
+          >
 
-            <div className="
-              max-w-[1500px]
-              mx-auto
-              px-5
-              lg:px-10
-              py-6
-            ">
+            <div
+              className="
+                max-w-[1500px]
+                mx-auto
+                px-5
+                lg:px-10
+                py-6
+              "
+            >
 
-              <div className="
-                flex
-                flex-col
-                md:flex-row
-                items-center
-                justify-between
-                gap-4
-              ">
+              <div
+                className="
+                  flex
+                  flex-col
+                  md:flex-row
+                  items-center
+                  justify-between
+                  gap-4
+                "
+              >
 
-                {/* Brand */}
+                {/* =================================================
+                    BRAND
+                ================================================== */}
 
                 <div className="text-center md:text-left">
 
@@ -133,14 +211,18 @@ function MainLayout({ children, showNavbar = false }) {
                 </div>
 
 
-                {/* Team */}
+                {/* =================================================
+                    TEAM
+                ================================================== */}
 
                 <p className="text-xs text-white/80">
                   Made with ❤️ by Metra-X
                 </p>
 
 
-                {/* Government */}
+                {/* =================================================
+                    GOVERNMENT
+                ================================================== */}
 
                 <p className="text-xs text-white/55 text-center">
                   Government of India • Department of Consumer Affairs
@@ -151,7 +233,9 @@ function MainLayout({ children, showNavbar = false }) {
             </div>
 
 
-            {/* Tricolour */}
+            {/* =================================================
+                TRICOLOUR
+            ================================================== */}
 
             <div className="flex h-[3px]">
 
@@ -177,13 +261,18 @@ function MainLayout({ children, showNavbar = false }) {
    PROTECTED PAGE
 ========================================================= */
 
-function ProtectedPage({ children, showNavbar = false }) {
+function ProtectedPage({
+  children,
+  showNavbar = false
+}) {
 
   return (
 
     <ProtectedRoute>
 
-      <MainLayout showNavbar={showNavbar}>
+      <MainLayout
+        showNavbar={showNavbar}
+      >
 
         {children}
 

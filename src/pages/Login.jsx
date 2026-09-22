@@ -63,12 +63,12 @@ const Login = () => {
         <div className="brand-section">
 
           <h1 className="brand-name">
-            <span className="label">Label</span>
-            <span className="lens">Lens</span>
+            <span className="label">Niyam</span>
+            <span className="lens">Drishti</span>
           </h1>
 
           <p className="tagline">
-            Scan Labels. Spot Violations.
+            See The Label Know The Truth 
           </p>
 
         </div>
