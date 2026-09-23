@@ -16,6 +16,10 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 
+/* =========================================================
+   INSPECTOR / EXISTING PAGES
+========================================================= */
+
 import Dashboard from "./pages/Dashboard";
 import NewInspection from "./pages/NewInspection";
 import ImageReview from "./pages/ImageReview";
@@ -29,12 +33,20 @@ import Analytics from "./pages/Analytics";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 
+/* =========================================================
+   CONSUMER PAGES
+========================================================= */
+
+import ConsumerDashboard from "./pages/ConsumerDashboard";
+import ConsumerHistory from "./pages/ConsumerHistory";
+import ConsumerReportIssue from "./pages/ConsumerReportIssue";
+import ConsumerReports from "./pages/ConsumerReports";
+import ConsumerScan from "./pages/ConsumerScan";
 
 
 /* =========================================================
    MAIN LAYOUT
-
-   ========================================================= */
+========================================================= */
 
 function MainLayout({ children, showNavbar = false }) {
 
@@ -66,13 +78,8 @@ function MainLayout({ children, showNavbar = false }) {
 
       <main className="min-h-screen">
 
-
         {/* =================================================
             HOME / DASHBOARD NAVBAR
-
-            IMPORTANT:
-            Home page is NOT changed.
-            Existing Navbar remains exactly as before.
         ================================================== */}
 
         {showNavbar && (
@@ -84,38 +91,18 @@ function MainLayout({ children, showNavbar = false }) {
 
         {/* =================================================
             INTERNAL PAGE HEADER
-
-            IMPORTANT:
-            Only internal pages get this menu button.
-
-            Home page does NOT get this button.
         ================================================== */}
 
         {!showNavbar && (
           <div className="relative">
 
             {/* Existing Government Header */}
+
             <GovernmentPageHeader />
 
 
             {/* =================================================
                 PERMANENT MENU BUTTON
-
-                It is positioned INSIDE the blue
-                Government of India strip.
-
-                It will appear on:
-                - New Inspection
-                - Image Review
-                - Online Product Review
-                - Analysis
-                - Compliance Result
-                - Evidence Review
-                - Report
-                - History
-                - Analytics
-                - Reports
-                - Settings
             ================================================== */}
 
             <button
@@ -263,12 +250,15 @@ function MainLayout({ children, showNavbar = false }) {
 
 function ProtectedPage({
   children,
-  showNavbar = false
+  showNavbar = false,
+  allowedRoles
 }) {
 
   return (
 
-    <ProtectedRoute>
+    <ProtectedRoute
+      allowedRoles={allowedRoles}
+    >
 
       <MainLayout
         showNavbar={showNavbar}
@@ -279,7 +269,6 @@ function ProtectedPage({
       </MainLayout>
 
     </ProtectedRoute>
-
   );
 }
 
@@ -305,15 +294,23 @@ function App() {
                 PUBLIC AUTH ROUTES
             ================================================== */}
 
+            {/* ================= LOGIN ================= */}
+
             <Route
               path="/login"
               element={<Login />}
             />
 
+
+            {/* ================= CREATE ACCOUNT ================= */}
+
             <Route
               path="/signup"
               element={<Signup />}
             />
+
+
+            {/* ================= FORGOT PASSWORD ================= */}
 
             <Route
               path="/forgot-password"
@@ -322,16 +319,18 @@ function App() {
 
 
             {/* =================================================
-                PROTECTED APP ROUTES
+                INSPECTOR ROUTES
             ================================================== */}
 
-
-            {/* ================= DASHBOARD ================= */}
+            {/* ================= INSPECTOR DASHBOARD ================= */}
 
             <Route
               path="/"
               element={
-                <ProtectedPage showNavbar={true}>
+                <ProtectedPage
+                  showNavbar={true}
+                  allowedRoles={["inspector"]}
+                >
                   <Dashboard />
                 </ProtectedPage>
               }
@@ -343,7 +342,12 @@ function App() {
             <Route
               path="/new-inspection"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={[
+                    "inspector",
+                    "manufacturer"
+                  ]}
+                >
                   <NewInspection />
                 </ProtectedPage>
               }
@@ -355,7 +359,9 @@ function App() {
             <Route
               path="/image-review"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <ImageReview />
                 </ProtectedPage>
               }
@@ -367,7 +373,9 @@ function App() {
             <Route
               path="/online-product-review"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <OnlineProductReview />
                 </ProtectedPage>
               }
@@ -379,7 +387,9 @@ function App() {
             <Route
               path="/analysis"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <Analysis />
                 </ProtectedPage>
               }
@@ -391,7 +401,9 @@ function App() {
             <Route
               path="/compliance-result"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <ComplianceResult />
                 </ProtectedPage>
               }
@@ -403,7 +415,9 @@ function App() {
             <Route
               path="/evidence-review"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <EvidenceReview />
                 </ProtectedPage>
               }
@@ -415,7 +429,9 @@ function App() {
             <Route
               path="/report"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <Report />
                 </ProtectedPage>
               }
@@ -427,7 +443,9 @@ function App() {
             <Route
               path="/history"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <History />
                 </ProtectedPage>
               }
@@ -439,7 +457,9 @@ function App() {
             <Route
               path="/analytics"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <Analytics />
                 </ProtectedPage>
               }
@@ -451,7 +471,9 @@ function App() {
             <Route
               path="/reports"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <Reports />
                 </ProtectedPage>
               }
@@ -463,11 +485,89 @@ function App() {
             <Route
               path="/settings"
               element={
-                <ProtectedPage>
+                <ProtectedPage
+                  allowedRoles={["inspector"]}
+                >
                   <Settings />
                 </ProtectedPage>
               }
             />
+
+
+            {/* =================================================
+                CONSUMER ROUTES
+            ================================================== */}
+
+            {/* ================= CONSUMER DASHBOARD ================= */}
+
+            <Route
+              path="/consumer-dashboard"
+              element={
+                <ProtectedPage
+                  showNavbar={true}
+                  allowedRoles={["consumer"]}
+                >
+                  <ConsumerDashboard />
+                </ProtectedPage>
+              }
+            />
+
+
+            {/* ================= CONSUMER SCAN ================= */}
+
+            <Route
+              path="/consumer-scan"
+              element={
+                <ProtectedPage
+                  allowedRoles={["consumer"]}
+                >
+                  <ConsumerScan />
+                </ProtectedPage>
+              }
+            />
+
+
+            {/* ================= CONSUMER HISTORY ================= */}
+
+            <Route
+              path="/consumer-history"
+              element={
+                <ProtectedPage
+                  allowedRoles={["consumer"]}
+                >
+                  <ConsumerHistory />
+                </ProtectedPage>
+              }
+            />
+
+
+            {/* ================= CONSUMER REPORT ISSUE ================= */}
+
+            <Route
+              path="/consumer-report-issue"
+              element={
+                <ProtectedPage
+                  allowedRoles={["consumer"]}
+                >
+                  <ConsumerReportIssue />
+                </ProtectedPage>
+              }
+            />
+
+
+            {/* ================= CONSUMER REPORTS ================= */}
+
+            <Route
+              path="/consumer-reports"
+              element={
+                <ProtectedPage
+                  allowedRoles={["consumer"]}
+                >
+                  <ConsumerReports />
+                </ProtectedPage>
+              }
+            />
+
 
           </Routes>
 
@@ -476,9 +576,10 @@ function App() {
       </AuthProvider>
 
     </BrowserRouter>
-
+    
   );
 }
 
 
 export default App;
+

@@ -14,27 +14,76 @@ const Login = () => {
   const handleLogin = (e) => {
     e.preventDefault();
 
+    /* =====================================================
+       VALIDATION
+    ===================================================== */
+
     if (!email || !password) {
       alert("Please enter your email and password.");
       return;
     }
 
-    login({
+    /* =====================================================
+       USER DATA
+    ===================================================== */
+
+    const loggedInUser = {
       email: email,
       role: role,
-    });
+    };
+
+    /* =====================================================
+       SAVE USER LOGIN + ROLE
+    ===================================================== */
+
+    login(loggedInUser);
+
+    /* =====================================================
+       SAVE USER FOR NAVBAR / OTHER COMPONENTS
+    ===================================================== */
+
+    localStorage.setItem(
+      "labellens_user",
+      JSON.stringify(loggedInUser)
+    );
+
+    /* =====================================================
+       UPDATE NAVBAR IMMEDIATELY
+    ===================================================== */
+
+    window.dispatchEvent(
+      new Event("labellens-user-updated")
+    );
+
+    /* =====================================================
+       ROLE-BASED REDIRECTION
+       
+       Inspector   → Inspector Dashboard
+       Consumer    → Consumer Dashboard
+       Manufacturer → New Inspection (temporary)
+    ===================================================== */
 
     if (role === "consumer") {
-      navigate("/consumer-dashboard");
-    } else {
-      navigate("/");
+      navigate("/consumer-dashboard", {
+        replace: true,
+      });
+    } else if (role === "inspector") {
+      navigate("/", {
+        replace: true,
+      });
+    } else if (role === "manufacturer") {
+      navigate("/new-inspection", {
+        replace: true,
+      });
     }
   };
 
   return (
     <div className="login-page">
 
-      {/*  BACKGROUND DECORATION  */}
+      {/* =====================================================
+          BACKGROUND DECORATION
+      ===================================================== */}
 
       <div className="chakra"></div>
 
@@ -43,11 +92,16 @@ const Login = () => {
       <div className="wave wave-three"></div>
 
 
-      {/*  MAIN CONTENT  */}
+      {/* =====================================================
+          MAIN CONTENT
+      ===================================================== */}
 
       <div className="login-content">
 
-        {/* Government Logo */}
+        {/* ===================================================
+            GOVERNMENT LOGO
+        =================================================== */}
+
         <div className="government-section">
 
           <img
@@ -59,28 +113,40 @@ const Login = () => {
         </div>
 
 
-        {/* LabelLens Branding */}
+        {/* ===================================================
+            NIYAMDRISHTI BRANDING
+        =================================================== */}
+
         <div className="brand-section">
 
-          <h1 className="brand-name">
-            <span className="label">Niyam</span>
-            <span className="lens">Drishti</span>
-          </h1>
+          <div className="flex items-center justify-center">
+           <img
+            src="/images/nw.png"
+            alt="NiyamDrishti"
+            className="w-[380px] h-auto object-contain"
+           />
+          </div>
 
           <p className="tagline">
-            See The Label Know The Truth 
+            See The Label Know The Truth
           </p>
 
         </div>
 
 
-        {/*  LOGIN CARD  */}
+        {/* ===================================================
+            LOGIN CARD
+        =================================================== */}
 
         <div className="login-card">
 
+          {/* LOGIN HEADING */}
+
           <div className="login-heading">
 
-            <h2>Login to Your Account</h2>
+            <h2>
+              Login to Your Account
+            </h2>
 
             <p>
               Access the Legal Metrology Compliance Portal
@@ -89,9 +155,15 @@ const Login = () => {
           </div>
 
 
+          {/* =================================================
+              LOGIN FORM
+          ================================================= */}
+
           <form onSubmit={handleLogin}>
 
-            {/*  ROLE  */}
+            {/* =================================================
+                ROLE
+            ================================================= */}
 
             <div className="form-group">
 
@@ -104,7 +176,9 @@ const Login = () => {
                 <select
                   id="role"
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) =>
+                    setRole(e.target.value)
+                  }
                   className="role-select"
                 >
 
@@ -127,7 +201,9 @@ const Login = () => {
             </div>
 
 
-            {/*  EMAIL  */}
+            {/* =================================================
+                EMAIL
+            ================================================= */}
 
             <div className="form-group">
 
@@ -146,7 +222,9 @@ const Login = () => {
                   type="email"
                   placeholder="Enter your email address"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
                 />
 
               </div>
@@ -154,7 +232,9 @@ const Login = () => {
             </div>
 
 
-            {/*  PASSWORD  */}
+            {/* =================================================
+                PASSWORD
+            ================================================= */}
 
             <div className="form-group">
 
@@ -170,17 +250,25 @@ const Login = () => {
 
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
                 />
 
                 <button
                   type="button"
                   className="show-password"
                   onClick={() =>
-                    setShowPassword(!showPassword)
+                    setShowPassword(
+                      !showPassword
+                    )
                   }
                 >
                   {showPassword ? "◉" : "○"}
@@ -191,36 +279,53 @@ const Login = () => {
             </div>
 
 
-            {/*  LOGIN BUTTON  */}
+            {/* =================================================
+                LOGIN BUTTON
+            ================================================= */}
 
             <button
               type="submit"
               className="login-button"
             >
-              <span>Login</span>
-              <span className="login-arrow">→</span>
+
+              <span>
+                Login
+              </span>
+
+              <span className="login-arrow">
+                →
+              </span>
+
             </button>
 
 
-            {/*  DIVIDER  */}
+            {/* =================================================
+                DIVIDER
+            ================================================= */}
 
             <div className="divider">
 
               <span></span>
 
-              <p>OR</p>
+              <p>
+                OR
+              </p>
 
               <span></span>
 
             </div>
 
 
-            {/*  FORGOT PASSWORD  */}
+            {/* =================================================
+                FORGOT PASSWORD
+            ================================================= */}
 
             <button
               type="button"
               className="forgot-password"
-              onClick={() => navigate("/forgot-password")}
+              onClick={() =>
+                navigate("/forgot-password")
+              }
             >
               Forgot Password?
             </button>
@@ -232,13 +337,17 @@ const Login = () => {
       </div>
 
 
-      {/*  FOOTER  */}
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
 
       <footer className="login-footer">
 
         <div className="footer-left">
+
           © 2026 Department of Consumer Affairs,
           Government of India
+
         </div>
 
         <div className="footer-right">
@@ -264,7 +373,9 @@ const Login = () => {
       </footer>
 
 
-      {/*  STYLES  */}
+      {/* =====================================================
+          STYLES
+      ===================================================== */}
 
       <style>{`
 
@@ -290,8 +401,9 @@ const Login = () => {
         }
 
 
-        /* 
-           PAGE */
+        /* =====================================================
+           PAGE
+        ===================================================== */
 
         .login-page {
           min-height: 100vh;
@@ -461,7 +573,7 @@ const Login = () => {
 
 
         /* =====================================================
-           LABEL LENS
+           NIYAMDRISHTI
         ===================================================== */
 
         .brand-section {
@@ -561,7 +673,9 @@ const Login = () => {
         }
 
 
-        /* ==== FORM */
+        /* =====================================================
+           FORM
+        ===================================================== */
 
         .form-group {
           margin-bottom: 21px;
@@ -580,7 +694,9 @@ const Login = () => {
         }
 
 
-        /* ==== INPUT==== */
+        /* =====================================================
+           INPUT
+        ===================================================== */
 
         .input-box {
           position: relative;
@@ -632,7 +748,9 @@ const Login = () => {
         }
 
 
-        /* ==== ROLE SELECT==== */
+        /* =====================================================
+           ROLE SELECT
+        ===================================================== */
 
         .role-select {
           width: 100%;
@@ -685,7 +803,9 @@ const Login = () => {
         }
 
 
-        /* ==== PASSWORD BUTTON==== */
+        /* =====================================================
+           PASSWORD BUTTON
+        ===================================================== */
 
         .show-password {
           position: absolute;
@@ -714,7 +834,9 @@ const Login = () => {
         }
 
 
-        /* ====LOGIN BUTTON==== */
+        /* =====================================================
+           LOGIN BUTTON
+        ===================================================== */
 
         .login-button {
           width: 100%;
@@ -762,7 +884,9 @@ const Login = () => {
         }
 
 
-        /* == OR DIVIDER== */
+        /* =====================================================
+           OR DIVIDER
+        ===================================================== */
 
         .divider {
           display: flex;
@@ -794,7 +918,9 @@ const Login = () => {
         }
 
 
-        /* == FORGOT PASSWORD== */
+        /* =====================================================
+           FORGOT PASSWORD
+        ===================================================== */
 
         .forgot-password {
           display: block;
@@ -821,7 +947,9 @@ const Login = () => {
         }
 
 
-        /* == FOOTER== */
+        /* =====================================================
+           FOOTER
+        ===================================================== */
 
         .login-footer {
           position: relative;
@@ -839,8 +967,6 @@ const Login = () => {
           display: flex;
 
           align-items: center;
-
-
 
           padding: 0 6%;
         }
@@ -874,7 +1000,9 @@ const Login = () => {
         }
 
 
-        /* == TABLET ==*/
+        /* =====================================================
+           TABLET
+        ===================================================== */
 
         @media (max-width: 800px) {
 
@@ -902,7 +1030,9 @@ const Login = () => {
         }
 
 
-        /* == MOBILE== */
+        /* =====================================================
+           MOBILE
+        ===================================================== */
 
         @media (max-width: 600px) {
 

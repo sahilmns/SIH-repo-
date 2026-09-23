@@ -26,30 +26,72 @@ import {
 ========================================================= */
 
 function NiyamDrishtiLogo({ className = "" }) {
-  const [src, setSrc] = useState("/images/NiyamDrishti.jpeg");
-
-  const logoFiles = [
-    "/images/NiyamDrishti.jpeg",
-    "/images/NiyamDrishti.jpg",
-    "/images/NiyamDrishti.png",
-  ];
-
-  const handleError = () => {
-    const currentIndex = logoFiles.indexOf(src);
-
-    if (currentIndex < logoFiles.length - 1) {
-      setSrc(logoFiles[currentIndex + 1]);
-    }
-  };
-
   return (
     <img
-      src={src}
+      src="/images/Newlogo.png?v=2"
       alt="NiyamDrishti Logo"
-      onError={handleError}
-      className={className}
+      className={`w-[320px] h-auto object-contain ${className}`}
+      onError={(e) => {
+        console.error(
+          "NiyamDrishti logo not found:",
+          e.currentTarget.src
+        );
+      }}
     />
   );
+}
+
+/* =========================================================
+   GET CURRENT USER ROLE
+========================================================= */
+
+function getCurrentUserRole() {
+  try {
+    const storedUser = localStorage.getItem("labellens_user");
+
+    if (!storedUser) {
+      return "Inspector";
+    }
+
+    const user = JSON.parse(storedUser);
+
+    const role = String(user?.role || "inspector").toLowerCase();
+
+    if (role === "consumer") {
+      return "Consumer";
+    }
+
+    if (role === "manufacturer") {
+      return "Manufacturer";
+    }
+
+    if (role === "inspector") {
+      return "Inspector";
+    }
+
+    return "Inspector";
+  } catch (error) {
+    console.error("Unable to read user role:", error);
+    return "Inspector";
+  }
+}
+
+/* =========================================================
+   ROLE SUBTITLE
+========================================================= */
+
+function getRoleSubtitle(role) {
+  switch (role) {
+    case "Consumer":
+      return "Consumer User";
+
+    case "Manufacturer":
+      return "Manufacturer";
+
+    case "Inspector":
+    default:
+      return "Enforcement Officer";
+  }
 }
 
 /* =========================================================
@@ -64,6 +106,10 @@ function Navbar({ setSidebarOpen }) {
   ======================================================= */
 
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const [userRole, setUserRole] = useState(() => {
+    return getCurrentUserRole();
+  });
 
   const [fontScale, setFontScale] = useState(() => {
     const savedScale = localStorage.getItem(
@@ -93,11 +139,44 @@ function Navbar({ setSidebarOpen }) {
   });
 
   const [languageOpen, setLanguageOpen] = useState(false);
-
   const [language, setLanguage] = useState("English");
 
   const [notificationsOpen, setNotificationsOpen] =
     useState(false);
+
+  /* =======================================================
+     UPDATE ROLE
+  ======================================================= */
+
+  useEffect(() => {
+    const updateUserRole = () => {
+      setUserRole(getCurrentUserRole());
+    };
+
+    updateUserRole();
+
+    window.addEventListener(
+      "labellens-user-updated",
+      updateUserRole
+    );
+
+    window.addEventListener(
+      "storage",
+      updateUserRole
+    );
+
+    return () => {
+      window.removeEventListener(
+        "labellens-user-updated",
+        updateUserRole
+      );
+
+      window.removeEventListener(
+        "storage",
+        updateUserRole
+      );
+    };
+  }, []);
 
   /* =======================================================
      SCROLL DETECTION
@@ -108,10 +187,16 @@ function Navbar({ setSidebarOpen }) {
       setIsScrolled(window.scrollY > 100);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener(
+      "scroll",
+      handleScroll
+    );
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
     };
   }, []);
 
@@ -219,6 +304,8 @@ function Navbar({ setSidebarOpen }) {
     setLanguageOpen(false);
   };
 
+  const roleSubtitle = getRoleSubtitle(userRole);
+
   /* =======================================================
      RETURN
   ======================================================= */
@@ -245,7 +332,6 @@ function Navbar({ setSidebarOpen }) {
           transition-all
           duration-500
           ease-out
-
           ${
             isScrolled
               ? "translate-y-0 opacity-100 scale-[1]"
@@ -254,7 +340,9 @@ function Navbar({ setSidebarOpen }) {
         `}
       >
 
-        {/* TRICOLOUR */}
+        {/* =================================================
+            TRICOLOUR
+        ================================================== */}
 
         <div className="flex h-[3px] w-full">
           <div className="w-1/3 bg-[#ff9933]" />
@@ -264,87 +352,96 @@ function Navbar({ setSidebarOpen }) {
 
         <div className="max-w-[1500px] mx-auto px-5 lg:px-10">
 
-          <div className="h-[70px] flex items-center gap-6">
+          <div className="h-[70px] flex items-center gap-4">
 
-            {/* LOGO + BRAND */}
+            {/* =================================================
+                HAMBURGER MENU
+                LEFT SIDE
+            ================================================== */}
+
+            <button
+              type="button"
+              onClick={() => {
+                if (setSidebarOpen) {
+                  setSidebarOpen(true);
+                }
+              }}
+              aria-label="Open menu"
+              title="Open menu"
+              className="
+                shrink-0
+                flex
+                items-center
+                justify-center
+                w-[42px]
+                h-[42px]
+                rounded-lg
+                text-slate-700
+                hover:text-[#073b67]
+                hover:bg-slate-100
+                active:bg-slate-200
+                transition-all
+                duration-200
+                cursor-pointer
+              "
+            >
+              <Menu
+                size={27}
+                strokeWidth={2}
+              />
+            </button>
+
+            {/* =================================================
+                NIYAMDRISHTI BRAND LOGO
+            ================================================== */}
 
             <button
               type="button"
               onClick={() => navigate("/")}
+              aria-label="NiyamDrishti Home"
               className="
+                shrink-0
                 flex
                 items-center
-                gap-3
-                shrink-0
-                text-left
-                group
+                justify-center
+                bg-transparent
+                border-0
+                p-0
+                m-0
+                cursor-pointer
               "
             >
-
-              <div
+              <img
+                src="/images/nw.png"
+                alt="NiyamDrishti"
                 className="
-                  w-10
-                  h-10
-                  rounded-lg
-                  bg-white
-                  border
-                  border-slate-200
-                  flex
-                  items-center
-                  justify-center
-                  shadow-sm
-                  overflow-hidden
-                  group-hover:scale-105
-                  transition-transform
-                  duration-200
+                  w-[150px]
+                  sm:w-[190px]
+                  md:w-[230px]
+                  lg:w-[270px]
+                  h-auto
+                  max-h-[65px]
+                  object-contain
+                  object-left
                 "
-              >
-
-                <NiyamDrishtiLogo
-                  className="
-                    w-full
-                    h-full
-                    object-contain
-                  "
-                />
-
-              </div>
-
-              <div className="hidden sm:block">
-
-                <p
-                  className="
-                    text-[9px]
-                    font-bold
-                    tracking-[0.15em]
-                    uppercase
-                    text-[#073b67]
-                  "
-                >
-                  Department of Consumer Affairs
-                </p>
-
-                <p className="text-lg font-extrabold tracking-tight">
-
-                  <span className="text-[#0A4F8F]">
-                    Niyam
-                  </span>
-
-                  <span className="text-[#2D9CDB]">
-                    Drishti
-                  </span>
-
-                </p>
-
-              </div>
-
+                onError={(e) => {
+                  console.error(
+                    "NiyamDrishti brand image not found:",
+                    e.currentTarget.src
+                  );
+                }}
+              />
             </button>
 
-            {/* RIGHT SIDE */}
+            {/* =================================================
+                RIGHT SIDE
+            ================================================== */}
 
             <div className="flex items-center gap-1.5 ml-auto">
 
-              {/* HELP */}
+              {/* =================================================
+                  HELP
+              ================================================== */}
 
               <button
                 type="button"
@@ -367,7 +464,9 @@ function Navbar({ setSidebarOpen }) {
                 Help
               </button>
 
-              {/* NOTIFICATIONS */}
+              {/* =================================================
+                  NOTIFICATIONS
+              ================================================== */}
 
               <div className="relative">
 
@@ -461,8 +560,7 @@ function Navbar({ setSidebarOpen }) {
                       </p>
 
                       <p className="text-xs text-slate-500 mt-1">
-                        NiyamDrishti inspection portal is ready
-                        for inspection.
+                        NiyamDrishti compliance portal is ready.
                       </p>
 
                     </div>
@@ -472,7 +570,9 @@ function Navbar({ setSidebarOpen }) {
 
               </div>
 
-              {/* INSPECTOR */}
+              {/* =================================================
+                  DYNAMIC USER PROFILE
+              ================================================== */}
 
               <div className="hidden xl:flex items-center gap-2 ml-2">
 
@@ -498,11 +598,11 @@ function Navbar({ setSidebarOpen }) {
                 <div>
 
                   <p className="text-sm font-bold text-slate-800">
-                    Inspector
+                    {userRole}
                   </p>
 
                   <p className="text-[10px] text-slate-500">
-                    Enforcement Officer
+                    {roleSubtitle}
                   </p>
 
                 </div>
@@ -513,26 +613,6 @@ function Navbar({ setSidebarOpen }) {
                 />
 
               </div>
-
-              {/* MOBILE */}
-
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Open menu"
-                className="
-                  md:hidden
-                  p-2
-                  rounded-md
-                  text-slate-700
-                  hover:bg-slate-100
-                  transition
-                "
-              >
-
-                <Menu size={24} />
-
-              </button>
 
             </div>
 
@@ -587,7 +667,6 @@ function Navbar({ setSidebarOpen }) {
                   <svg
                     viewBox="0 0 100 100"
                     className="w-[11px] h-[11px]"
-                    aria-label="Ashoka Chakra"
                   >
 
                     <circle
@@ -636,8 +715,6 @@ function Navbar({ setSidebarOpen }) {
 
               </div>
 
-              {/* GOVERNMENT OF INDIA */}
-
               <span className="text-sm md:text-base font-bold whitespace-nowrap">
                 Government of India
               </span>
@@ -658,7 +735,9 @@ function Navbar({ setSidebarOpen }) {
 
             </div>
 
-            {/* ACCESSIBILITY AREA */}
+            {/* =================================================
+                ACCESSIBILITY AREA
+            ================================================== */}
 
             <div
               className="
@@ -687,15 +766,11 @@ function Navbar({ setSidebarOpen }) {
                 Skip to main content
               </button>
 
-              <span className="text-white/25">
-                |
-              </span>
+              <span className="text-white/25">|</span>
 
               <button
                 type="button"
                 onClick={decreaseFont}
-                aria-label="Decrease font size"
-                title="Decrease font size"
                 disabled={fontScale <= 80}
                 className={`
                   text-sm
@@ -718,8 +793,6 @@ function Navbar({ setSidebarOpen }) {
               <button
                 type="button"
                 onClick={resetFont}
-                aria-label="Reset font size"
-                title="Reset font size"
                 className={`
                   w-[28px]
                   h-[28px]
@@ -731,7 +804,6 @@ function Navbar({ setSidebarOpen }) {
                   text-sm
                   font-medium
                   transition
-
                   ${
                     fontScale === 100
                       ? "border-white bg-white/10 text-white"
@@ -745,8 +817,6 @@ function Navbar({ setSidebarOpen }) {
               <button
                 type="button"
                 onClick={increaseFont}
-                aria-label="Increase font size"
-                title="Increase font size"
                 disabled={fontScale >= 140}
                 className={`
                   text-sm
@@ -766,16 +836,12 @@ function Navbar({ setSidebarOpen }) {
                 A+
               </button>
 
-              <span className="text-white/25">
-                |
-              </span>
+              <span className="text-white/25">|</span>
 
               {/* ACCESSIBILITY */}
 
               <button
                 type="button"
-                aria-label="Accessibility options"
-                title="Accessibility options"
                 onClick={() =>
                   setAccessibilityOpen(
                     (current) => !current
@@ -788,7 +854,6 @@ function Navbar({ setSidebarOpen }) {
                   text-[20px]
                   leading-none
                   transition
-
                   ${
                     accessibilityOpen
                       ? "text-[#8ED8FF]"
@@ -799,9 +864,7 @@ function Navbar({ setSidebarOpen }) {
                 <Accessibility size={21} />
               </button>
 
-              <span className="text-white/25">
-                |
-              </span>
+              <span className="text-white/25">|</span>
 
               {/* LANGUAGE */}
 
@@ -832,13 +895,10 @@ function Navbar({ setSidebarOpen }) {
                     🌐
                   </span>
 
-                  <span>
-                    {language}
-                  </span>
+                  <span>{language}</span>
 
                   <LanguageChevron
                     size={15}
-                    strokeWidth={2}
                     className={`
                       mt-0.5
                       transition-transform
@@ -998,6 +1058,8 @@ function Navbar({ setSidebarOpen }) {
 
           <div className="p-4 space-y-4">
 
+            {/* TEXT SIZE */}
+
             <div>
 
               <p className="text-sm font-bold text-slate-800 mb-2">
@@ -1071,14 +1133,7 @@ function Navbar({ setSidebarOpen }) {
 
             {/* HIGH CONTRAST */}
 
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                py-2
-              "
-            >
+            <div className="flex items-center justify-between py-2">
 
               <div>
 
@@ -1105,7 +1160,6 @@ function Navbar({ setSidebarOpen }) {
                   h-6
                   rounded-full
                   transition
-
                   ${
                     highContrast
                       ? "bg-[#1769aa]"
@@ -1124,7 +1178,6 @@ function Navbar({ setSidebarOpen }) {
                     rounded-full
                     shadow
                     transition
-
                     ${
                       highContrast
                         ? "left-6"
@@ -1139,14 +1192,7 @@ function Navbar({ setSidebarOpen }) {
 
             {/* UNDERLINE LINKS */}
 
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                py-2
-              "
-            >
+            <div className="flex items-center justify-between py-2">
 
               <div>
 
@@ -1173,7 +1219,6 @@ function Navbar({ setSidebarOpen }) {
                   h-6
                   rounded-full
                   transition
-
                   ${
                     underlineLinks
                       ? "bg-[#1769aa]"
@@ -1192,7 +1237,6 @@ function Navbar({ setSidebarOpen }) {
                     rounded-full
                     shadow
                     transition
-
                     ${
                       underlineLinks
                         ? "left-6"
@@ -1277,11 +1321,8 @@ function Navbar({ setSidebarOpen }) {
                 transition
               "
             >
-
               <Menu size={18} />
-
               All Services
-
             </button>
 
             {/* HOME */}
@@ -1305,14 +1346,11 @@ function Navbar({ setSidebarOpen }) {
                 transition
               "
             >
-
               <Home size={18} />
-
               Home
-
             </button>
 
-            {/* INSPECTIONS */}
+            {/* COMPLIANCE */}
 
             <button
               type="button"
@@ -1333,11 +1371,8 @@ function Navbar({ setSidebarOpen }) {
                 transition
               "
             >
-
               <ClipboardCheck size={18} />
-
-              Inspections
-
+              Compliance
             </button>
 
             {/* REPORTS */}
@@ -1361,11 +1396,8 @@ function Navbar({ setSidebarOpen }) {
                 transition
               "
             >
-
               <BarChart3 size={18} />
-
               Reports
-
             </button>
 
             {/* HELP & SUPPORT */}
@@ -1389,20 +1421,15 @@ function Navbar({ setSidebarOpen }) {
                 transition
               "
             >
-
               <HelpCircle size={18} />
-
               Help & Support
-
             </button>
 
             {/* GET STARTED */}
 
             <button
               type="button"
-              onClick={() =>
-                navigate("/new-inspection")
-              }
+              onClick={() => navigate("/signup")}
               className="
                 ml-auto
                 shrink-0
@@ -1447,7 +1474,7 @@ function Navbar({ setSidebarOpen }) {
 
       <section
         id="main-content"
-        tabIndex="-1"
+        tabIndex={-1}
         className="
           relative
           overflow-hidden
@@ -1458,15 +1485,13 @@ function Navbar({ setSidebarOpen }) {
         "
       >
 
-        {/* ===================================================
-            BACKGROUND IMAGE
-        ==================================================== */}
+        {/* BACKGROUND IMAGE */}
 
         <div className="absolute inset-0">
 
           <img
             src="/images/backgroundinspection.png"
-            alt="Legal Metrology inspection"
+            alt="Legal Metrology compliance"
             className="
               absolute
               inset-0
@@ -1479,9 +1504,18 @@ function Navbar({ setSidebarOpen }) {
 
         </div>
 
-        {/* ===================================================
-            HERO CONTENT
-        ==================================================== */}
+        {/* DARK OVERLAY */}
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-black/10
+            z-[1]
+          "
+        />
+
+        {/* HERO CONTENT */}
 
         <div
           className="
@@ -1506,18 +1540,16 @@ function Navbar({ setSidebarOpen }) {
             "
           >
 
-            {/* =================================================
-                ASHOKA LOGO
-            ================================================== */}
+            {/* ASHOKA LOGO */}
 
-            <div className="flex justify-center mb-2">
+            <div className="flex justify-center mb-1">
 
               <div
                 className="
-                  w-[210px]
-                  h-[210px]
-                  md:w-[240px]
-                  md:h-[240px]
+                  w-[190px]
+                  h-[190px]
+                  md:w-[220px]
+                  md:h-[220px]
                   flex
                   items-center
                   justify-center
@@ -1526,7 +1558,7 @@ function Navbar({ setSidebarOpen }) {
               >
 
                 <img
-                  src="/images/ashokawhite.png"
+                  src="/images/ashokawhite.png?v=2"
                   alt="Ashoka Lion Capital"
                   className="
                     w-full
@@ -1540,37 +1572,39 @@ function Navbar({ setSidebarOpen }) {
 
             </div>
 
-            {/* NIYAMDRISHTI */}
+            {/* NIYAMDRISHTI LOGO */}
 
-            <h1
-              className="
-                mt-2
-                text-[45px]
-                sm:text-[51px]
-                md:text-[60px]
-                lg:text-[68px]
-                font-black
-                tracking-[-0.045em]
-                leading-[0.95]
-                drop-shadow-[0_3px_10px_rgba(7,59,103,0.65)]
-              "
-            >
+            <div className="flex justify-center mt-[-8px] mb-2">
 
-              <span className="text-[#EAF6FF]">
-                Niyam
-              </span>
+              <img
+                src="/images/Newlogo.png?v=2"
+                alt="NiyamDrishti"
+                className="
+                  w-[280px]
+                  sm:w-[330px]
+                  md:w-[390px]
+                  lg:w-[440px]
+                  xl:w-[480px]
+                  h-auto
+                  max-h-none
+                  object-contain
+                  drop-shadow-[0_3px_8px_rgba(0,0,0,0.55)]
+                "
+                onError={(e) => {
+                  console.error(
+                    "Hero logo not found:",
+                    e.currentTarget.src
+                  );
+                }}
+              />
 
-              <span className="text-[#8ED8FF]">
-                Drishti
-              </span>
-
-            </h1>
+            </div>
 
             {/* SUBTITLE */}
 
             <p
               className="
-                mt-2
+                mt-1
                 text-sm
                 md:text-[15px]
                 font-semibold
@@ -1579,7 +1613,7 @@ function Navbar({ setSidebarOpen }) {
                 drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]
               "
             >
-              Digital Legal Metrology Inspection Portal
+              Digital Legal Metrology Compliance Portal
             </p>
 
             {/* TRICOLOUR */}
@@ -1616,13 +1650,11 @@ function Navbar({ setSidebarOpen }) {
                 drop-shadow-[0_2px_5px_rgba(0,0,0,0.75)]
               "
             >
-
               Check Compliance.
 
               <span className="text-[#8ED8FF]">
                 {" "}Build Trust.
               </span>
-
             </p>
 
             {/* DIGITAL GOVERNANCE */}
@@ -1682,14 +1714,14 @@ function Navbar({ setSidebarOpen }) {
                 "
               >
 
-                Smart Inspection.
+                Smart Compliance.
 
                 <br />
 
                 Transparent{" "}
 
                 <span className="text-[#8ED8FF]">
-                  Compliance.
+                  Verification.
                 </span>
 
               </h2>
@@ -1735,7 +1767,7 @@ function Navbar({ setSidebarOpen }) {
                   className="text-[#8ED8FF]"
                 />
 
-                Evidence-based inspection
+                Evidence-based verification
 
               </div>
 
@@ -1856,15 +1888,12 @@ function Navbar({ setSidebarOpen }) {
           filter: contrast(1.12);
         }
 
-        body.accessibility-high-contrast
-        input,
-        body.accessibility-high-contrast
-        button {
+        body.accessibility-high-contrast input,
+        body.accessibility-high-contrast button {
           border-color: #111827;
         }
 
-        body.accessibility-underline-links
-        a {
+        body.accessibility-underline-links a {
           text-decoration: underline !important;
           text-underline-offset: 3px;
         }

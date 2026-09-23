@@ -1,5 +1,5 @@
 import {
-  Scale,
+  
   Accessibility,
   HelpCircle,
   Bell,
@@ -13,6 +13,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 function GovernmentPageHeader() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  /* =====================================================
+     INSPECTOR PAGE NAMES
+  ====================================================== */
 
   const pageNames = {
     "/new-inspection": "New Inspection",
@@ -28,8 +32,28 @@ function GovernmentPageHeader() {
     "/settings": "Settings",
   };
 
-  const currentPage =
-    pageNames[location.pathname] || "Inspection Portal";
+  /* =====================================================
+     CONSUMER PORTAL DETECTION
+  ====================================================== */
+
+  const isConsumerPortal =
+    location.pathname.startsWith("/consumer");
+
+  /* =====================================================
+     CURRENT PAGE / PORTAL NAME
+  ====================================================== */
+
+  const currentPage = isConsumerPortal
+    ? "Consumer Portal"
+    : pageNames[location.pathname] || "Inspection Portal";
+
+  /* =====================================================
+     PORTAL SUBTITLE
+  ====================================================== */
+
+  const portalSubtitle = isConsumerPortal
+    ? "NiyamDrishti • Digital Legal Metrology Consumer Portal"
+    : "NiyamDrishti • Digital Legal Metrology Inspection System";
 
   return (
     <header className="w-full">
@@ -43,6 +67,8 @@ function GovernmentPageHeader() {
         <div className="max-w-[1500px] mx-auto px-5 lg:px-10">
 
           <div className="min-h-[44px] flex items-center justify-between">
+
+            {/* LEFT SIDE */}
 
             <div className="flex items-center gap-3">
 
@@ -60,22 +86,43 @@ function GovernmentPageHeader() {
 
             </div>
 
+            {/* RIGHT SIDE */}
 
             <div className="hidden md:flex items-center gap-5 text-sm">
 
-              <button className="flex items-center gap-2 hover:text-[#ffcc80] transition">
+              <button
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  hover:text-[#ffcc80]
+                  transition
+                "
+              >
                 <Accessibility size={17} />
                 Accessibility
               </button>
 
-              <span className="text-white/30">|</span>
+              <span className="text-white/30">
+                |
+              </span>
 
-              <button className="flex items-center gap-2 hover:text-[#ffcc80] transition">
+              <button
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  hover:text-[#ffcc80]
+                  transition
+                "
+              >
                 <HelpCircle size={17} />
                 Help
               </button>
 
-              <span className="text-white/30">|</span>
+              <span className="text-white/30">
+                |
+              </span>
 
               <button className="hover:text-[#ffcc80] transition">
                 English
@@ -100,78 +147,62 @@ function GovernmentPageHeader() {
 
           <div className="min-h-[82px] flex items-center justify-between">
 
-            {/* BRAND */}
+            {/* =================================================
+                BRAND
+            ================================================== */}
 
             <button
+              type="button"
               onClick={() => navigate("/")}
-              className="flex items-center gap-3 text-left group"
-            >
-
-              <div className="
-                w-12
-                h-12
-                rounded-full
-                bg-[#073b67]
+              className="
                 flex
                 items-center
-                justify-center
-                shadow-sm
-                group-hover:shadow-md
-                transition
-              ">
+                text-left
+                group
+                p-0
+                bg-transparent
+                border-0
+              "
+            >
 
-                <Scale
-                  size={25}
-                  className="text-white"
-                />
-
-              </div>
-
-
-              <div>
-
-                <p className="
-                  text-[9px]
-                  md:text-[10px]
-                  font-bold
-                  tracking-[0.16em]
-                  uppercase
-                  text-[#073b67]
-                ">
-                  Department of Consumer Affairs
-                </p>
-
-                <p className="
-                  text-xl
-                  md:text-2xl
-                  font-bold
-                  text-[#073b67]
-                  leading-tight
-                ">
-                  NiyamDrishti
-                </p>
-
-                <p className="
-                  text-[11px]
-                  md:text-xs
-                  text-slate-500
-                ">
-                  Digital Legal Metrology Inspection Portal
-                </p>
-
-              </div>
+              <img
+                src="/images/nw.png"
+                alt="NiyamDrishti"
+                className="
+                  w-[220px]
+                  sm:w-[260px]
+                  md:w-[300px]
+                  lg:w-[340px]
+                  h-auto
+                  max-h-[75px]
+                  object-contain
+                  object-left
+                "
+                onError={(e) => {
+                  console.error(
+                    "NiyamDrishti image not found:",
+                    e.currentTarget.src
+                  );
+                }}
+              />
 
             </button>
 
 
-            {/* RIGHT SIDE */}
+            {/* =================================================
+                RIGHT SIDE
+            ================================================== */}
 
             <div className="flex items-center gap-3 md:gap-5">
 
+              {/* ACCESSIBILITY */}
+
               <button
                 className="
-                  hidden md:flex
-                  items-center gap-2
+                  hidden
+                  md:flex
+                  items-center
+                  gap-2
                   text-slate-600
                   hover:text-[#073b67]
                   transition
@@ -187,10 +218,14 @@ function GovernmentPageHeader() {
               </button>
 
 
+              {/* HELP */}
+
               <button
                 className="
-                  hidden md:flex
-                  items-center gap-2
+                  hidden
+                  md:flex
+                  items-center
+                  gap-2
                   text-slate-600
                   hover:text-[#073b67]
                   transition
@@ -206,7 +241,10 @@ function GovernmentPageHeader() {
               </button>
 
 
+              {/* NOTIFICATIONS */}
+
               <button
+                type="button"
                 className="
                   relative
                   p-2
@@ -219,15 +257,17 @@ function GovernmentPageHeader() {
 
                 <Bell size={21} />
 
-                <span className="
-                  absolute
-                  top-1
-                  right-1
-                  w-2
-                  h-2
-                  bg-[#e5232e]
-                  rounded-full
-                " />
+                <span
+                  className="
+                    absolute
+                    top-1
+                    right-1
+                    w-2
+                    h-2
+                    bg-[#e5232e]
+                    rounded-full
+                  "
+                />
 
               </button>
 
@@ -236,15 +276,17 @@ function GovernmentPageHeader() {
 
               <div className="hidden sm:flex items-center gap-2">
 
-                <div className="
-                  w-9
-                  h-9
-                  rounded-full
-                  bg-[#edf5fa]
-                  flex
-                  items-center
-                  justify-center
-                ">
+                <div
+                  className="
+                    w-9
+                    h-9
+                    rounded-full
+                    bg-[#edf5fa]
+                    flex
+                    items-center
+                    justify-center
+                  "
+                >
 
                   <UserCircle
                     size={22}
@@ -301,19 +343,22 @@ function GovernmentPageHeader() {
 
           <div className="py-5">
 
-            {/* Breadcrumb */}
+            {/* BREADCRUMB */}
 
-            <div className="
-              flex
-              items-center
-              gap-2
-              text-xs
-              md:text-sm
-              text-slate-500
-              mb-3
-            ">
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                text-xs
+                md:text-sm
+                text-slate-500
+                mb-3
+              "
+            >
 
               <button
+                type="button"
                 onClick={() => navigate("/")}
                 className="
                   flex
@@ -347,52 +392,65 @@ function GovernmentPageHeader() {
 
               <div>
 
-                <h1 className="
-                  text-2xl
-                  md:text-3xl
-                  font-bold
-                  text-[#102a43]
-                ">
+                <h1
+                  className="
+                    text-2xl
+                    md:text-3xl
+                    font-bold
+                    text-[#102a43]
+                  "
+                >
                   {currentPage}
                 </h1>
 
-                <p className="
-                  mt-1
-                  text-sm
-                  md:text-base
-                  text-slate-500
-                ">
-                  NiyamDrishti • Digital Legal Metrology Inspection System
+                <p
+                  className="
+                    mt-1
+                    text-sm
+                    md:text-base
+                    text-slate-500
+                  "
+                >
+                  {portalSubtitle}
                 </p>
 
               </div>
 
 
-              {/* Portal status */}
+              {/* PORTAL STATUS */}
 
-              <div className="
-                hidden md:flex
-                items-center gap-2
-                px-3 py-2
-                bg-white
-                border
-                border-slate-200
-                rounded-md
-                shadow-sm
-              ">
+              <div
+                className="
+                  hidden
+                  md:flex
+                  items-center
+                  gap-2
+                  px-3
+                  py-2
+                  bg-white
+                  border
+                  border-slate-200
+                  rounded-md
+                  shadow-sm
+                "
+              >
 
-                <span className="
-                  w-2
-                  h-2
-                  bg-[#138808]
-                  rounded-full
-                " />
+                <span
+                  className="
+                    w-2
+                    h-2
+                    bg-[#138808]
+                    rounded-full
+                  "
+                />
 
-                <span className="
-                  text-xs
-                  font-semibold
-                  text-slate-600
-                ">
+                <span
+                  className="
+                    text-xs
+                    font-semibold
+                    text-slate-600
+                  "
+                >
                   Portal Active
                 </span>
 
@@ -411,3 +469,4 @@ function GovernmentPageHeader() {
 }
 
 export default GovernmentPageHeader;
+

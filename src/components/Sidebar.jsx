@@ -12,7 +12,6 @@ import {
 
 import { NavLink, useNavigate } from "react-router-dom";
 
-import logo from "../assets/labellogo.png";
 import { useAuth } from "../context/AuthContext";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -101,7 +100,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   return (
     <>
-      {/* OVERLAY */}
+      {/* =====================================================
+          OVERLAY
+      ====================================================== */}
 
       {sidebarOpen && (
         <div
@@ -111,7 +112,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         />
       )}
 
-      {/* SIDEBAR */}
+      {/* =====================================================
+          SIDEBAR
+      ====================================================== */}
 
       <aside
         className={`
@@ -132,46 +135,79 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         `}
       >
 
-        {/* LOGO */}
+        {/* =================================================
+            LOGO AREA
+        ================================================== */}
 
-        <div className="p-6 border-b border-slate-800">
+        <div className="p-5 border-b border-slate-800">
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
 
-            {/* Logo + Name */}
-
-            <div className="flex items-center gap-3">
-
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white/5">
-
-                <img
-                  src={logo}
-                  alt="NiyamDrishti Logo"
-                  className="w-full h-full object-contain"
-                />
-
-              </div>
-
-              <div>
-
-                <h2 className="text-xl font-bold tracking-tight">
-                  Niyam<span className="text-cyan-400">Drishti</span>
-                </h2>
-
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Compliance Intelligence
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* Close Button */}
+            {/* NEW LOGO */}
 
             <button
+              type="button"
+              onClick={() => {
+                closeMenu();
+                navigate("/");
+              }}
+              className="
+                flex
+                items-center
+                justify-start
+                flex-1
+                min-w-0
+                bg-transparent
+                border-0
+                p-0
+                cursor-pointer
+              "
+              aria-label="NiyamDrishti Home"
+            >
+
+              <img
+                src="/images/Newlogo.png"
+                alt="NiyamDrishti"
+                className="
+                  w-[210px]
+                  h-auto
+                  max-h-[80px]
+                  object-contain
+                  object-left
+                "
+                onError={(e) => {
+                  console.error(
+                    "Sidebar logo not found:",
+                    e.currentTarget.src
+                  );
+                }}
+              />
+              
+
+            </button>
+
+
+            {/* CLOSE BUTTON */}
+
+            <button
+              type="button"
               onClick={closeMenu}
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all duration-200"
+              className="
+                shrink-0
+                w-9
+                h-9
+                flex
+                items-center
+                justify-center
+                rounded-lg
+                text-slate-400
+                hover:text-white
+                hover:bg-slate-800
+                transition-all
+                duration-200
+              "
               aria-label="Close menu"
+              title="Close menu"
             >
               <X size={21} />
             </button>
@@ -181,7 +217,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         </div>
 
 
-        {/* NAVIGATION */}
+        {/* =================================================
+            NAVIGATION
+        ================================================== */}
 
         <nav className="p-4 space-y-2">
 
@@ -215,13 +253,42 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         </nav>
 
 
-        {/* LOGOUT */}
+        {/* =================================================
+            LOGOUT
+        ================================================== */}
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
+        <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            p-4
+            border-t
+            border-slate-800
+          "
+        >
 
           <button
+            type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:shadow-lg hover:shadow-red-900/20 hover:translate-x-1 transition-all duration-200"
+            className="
+              w-full
+              flex
+              items-center
+              gap-3
+              px-4
+              py-3
+              rounded-xl
+              text-red-400
+              hover:text-red-300
+              hover:bg-red-500/20
+              hover:shadow-lg
+              hover:shadow-red-900/20
+              hover:translate-x-1
+              transition-all
+              duration-200
+            "
           >
 
             <LogOut size={19} />
@@ -238,3 +305,4 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 }
 
 export default Sidebar;
+
