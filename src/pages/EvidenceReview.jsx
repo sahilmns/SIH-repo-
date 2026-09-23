@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useInspection } from "../context/InspectionContext";
 
 function StatusBadge({ status }) {
-  const normalized = status?.toUpperCase();
+  const normalized = String(status || "").toUpperCase();
 
   if (normalized === "PASS") {
     return (
@@ -13,7 +13,12 @@ function StatusBadge({ status }) {
     );
   }
 
-  if (normalized === "PARTIAL" || normalized === "NEEDS REVIEW") {
+  if (
+    normalized === "PARTIAL" ||
+    normalized === "NEEDS REVIEW" ||
+    normalized === "UNCERTAIN" ||
+    normalized === "REQUIRES_ADDITIONAL_IMAGE"
+  ) {
     return (
       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
         NEEDS REVIEW
@@ -29,7 +34,19 @@ function StatusBadge({ status }) {
 }
 
 function ConfidenceBar({ confidence }) {
-  const value = Math.round(Number(confidence || 0) * 100);
+  let numericValue = Number(confidence);
+
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+
+  // Backend confidence is normally 0–1.
+  // Also support percentage values if returned by another source.
+  if (numericValue <= 1) {
+    numericValue *= 100;
+  }
+
+  const value = Math.max(0, Math.min(100, Math.round(numericValue)));
 
   return (
     <div className="flex items-center gap-3 min-w-[150px]">
@@ -47,12 +64,41 @@ function ConfidenceBar({ confidence }) {
   );
 }
 
+function formatBoundingBox(boundingBox) {
+  if (!boundingBox) {
+    return null;
+  }
+
+  const { x1, y1, x2, y2 } = boundingBox;
+
+  if (
+    x1 === undefined ||
+    y1 === undefined ||
+    x2 === undefined ||
+    y2 === undefined
+  ) {
+    return null;
+  }
+
+  return (
+    <>
+      X: {x1} – {x2}
+      {" | "}
+      Y: {y1} – {y2}
+    </>
+  );
+}
+
 export default function EvidenceReview() {
   const navigate = useNavigate();
   const { inspection } = useInspection();
 
-  const report = inspection?.complianceResult?.compliance_report;
-  const checks = report?.checks || [];
+  const result = inspection?.complianceResult;
+  const report = result?.compliance_report;
+
+  const checks = Array.isArray(report?.checks)
+    ? report.checks
+    : [];
 
   const image = inspection?.images?.[0];
 
@@ -75,10 +121,12 @@ export default function EvidenceReview() {
           </h1>
 
           <p className="text-gray-500 mt-2">
-            Review the text and compliance evidence detected from the product label.
+            Review the text and compliance evidence detected from the product
+            label.
           </p>
         </div>
       </div>
+
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -140,84 +188,111 @@ export default function EvidenceReview() {
 
             ) : (
 
-              checks.map((check, index) => (
+              checks.map((check, index) => {
 
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition"
-                >
+                const confidence =
+                  check.confidence !== undefined &&
+                  check.confidence !== null
+                    ? Number(check.confidence)
+                    : null;
 
-                  {/* Rule header */}
-                  <div className="flex items-center justify-between gap-3 mb-3">
+                const boundingBox = check.bounding_box;
 
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {check.name}
-                      </h3>
+                return (
+                  <div
+                    key={check.rule_code || check.name || index}
+                    className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 transition"
+                  >
 
-                      <p className="text-xs text-gray-500 mt-1">
-                        Rule check #{index + 1}
-                      </p>
+                    {/* Rule header */}
+                    <div className="flex items-center justify-between gap-3 mb-3">
+
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {check.name || check.rule_name || "Compliance Check"}
+                        </h3>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                          {check.rule_code
+                            ? `Rule: ${check.rule_code}`
+                            : `Rule check #${index + 1}`}
+                        </p>
+                      </div>
+
+                      <StatusBadge status={check.status} />
+
                     </div>
 
-                    <StatusBadge status={check.status} />
 
-                  </div>
+                    {/* Detected value */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
+
+                      <p className="text-xs text-gray-500 mb-1">
+                        Detected Value
+                      </p>
+
+                      <p className="text-sm font-medium text-gray-900 break-words">
+                        {check.value !== null &&
+                        check.value !== undefined &&
+                        String(check.value).trim() !== ""
+                          ? String(check.value)
+                          : "Not detected"}
+                      </p>
+
+                    </div>
 
 
-                  {/* Detected value */}
-                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                    {/* Source text */}
+                    {check.source_text && (
+                      <div className="bg-blue-50 rounded-lg p-3 mb-3">
 
-                    <p className="text-xs text-gray-500 mb-1">
-                      Detected Value
-                    </p>
+                        <p className="text-xs text-blue-600 mb-1">
+                          OCR Evidence
+                        </p>
 
-                    <p className="text-sm font-medium text-gray-900 break-words">
-                      {check.value || "Not detected"}
-                    </p>
-
-                  </div>
-
-
-                  {/* Confidence */}
-                  {check.confidence !== null &&
-                    check.confidence !== undefined && (
-                      <div className="flex items-center justify-between">
-
-                        <span className="text-xs text-gray-500">
-                          OCR Confidence
-                        </span>
-
-                        <ConfidenceBar
-                          confidence={check.confidence}
-                        />
+                        <p className="text-sm text-gray-800 break-words">
+                          {check.source_text}
+                        </p>
 
                       </div>
                     )}
 
 
-                  {/* Bounding box information */}
-                  {check.bounding_box && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
+                    {/* Confidence */}
+                    {confidence !== null &&
+                      Number.isFinite(confidence) && (
+                        <div className="flex items-center justify-between">
 
-                      <p className="text-xs text-gray-500 mb-1">
-                        Evidence Location
-                      </p>
+                          <span className="text-xs text-gray-500">
+                            OCR Confidence
+                          </span>
 
-                      <p className="text-xs text-gray-600">
-                        X: {check.bounding_box.x1} –{" "}
-                        {check.bounding_box.x2}
-                        {" | "}
-                        Y: {check.bounding_box.y1} –{" "}
-                        {check.bounding_box.y2}
-                      </p>
+                          <ConfidenceBar
+                            confidence={confidence}
+                          />
 
-                    </div>
-                  )}
+                        </div>
+                      )}
 
-                </div>
 
-              ))
+                    {/* Bounding box information */}
+                    {boundingBox && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+
+                        <p className="text-xs text-gray-500 mb-1">
+                          Evidence Location
+                        </p>
+
+                        <p className="text-xs text-gray-600">
+                          {formatBoundingBox(boundingBox)}
+                        </p>
+
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })
 
             )}
 
