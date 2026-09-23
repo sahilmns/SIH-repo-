@@ -1,11 +1,18 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy.orm import Session
+from typing import List
 
 from ruleengine import (
     LegalMetrologyRuleEngine,
     LegalMetrologyOCREngine
+)
+
+from database import get_db
+
+from services.scan_service import (
+    save_scan_result
 )
 
 import tempfile
@@ -17,7 +24,7 @@ import os
 # ============================================================
 
 app = FastAPI(
-    title="LabelLens API",
+    title="NiyamDrishti API",
     description="Legal Metrology Label Compliance API",
     version="1.0"
 )
@@ -68,7 +75,7 @@ ALLOWED_EXTENSIONS = {
 @app.get("/")
 def home():
     return {
-        "message": "LabelLens API is running"
+        "message": "NiyamDrishti API is running"
     }
 
 
@@ -80,7 +87,7 @@ def home():
 def health():
     return {
         "status": "OK",
-        "message": "LabelLens API is healthy"
+        "message": "NiyamDrishti API is healthy"
     }
 
 
@@ -121,7 +128,8 @@ async def save_upload_to_temp(file: UploadFile):
 
 @app.post("/analyze-label")
 async def analyze_label(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
 ):
 
     image_path = None
@@ -129,7 +137,7 @@ async def analyze_label(
     try:
 
         # ----------------------------------------------------
-        # Save uploaded image
+        # Save uploaded image temporarily
         # ----------------------------------------------------
 
         image_path = await save_upload_to_temp(
@@ -144,10 +152,7 @@ async def analyze_label(
             image_path
         )
 
-        # ----------------------------------------------------
-        # Preserve original image filename
-        # ----------------------------------------------------
-
+        # Preserve original filename
         ocr_result["image"] = file.filename
 
         # ----------------------------------------------------
@@ -166,17 +171,47 @@ async def analyze_label(
             rule_engine.generate_final_report()
         )
 
+        final_report[
+            "compliance_report"
+        ]["image"] = file.filename
+
         # ----------------------------------------------------
-        # Add image information
+        # SAVE INSPECTION TO DATABASE
         # ----------------------------------------------------
 
-        final_report["compliance_report"]["image"] = (
-            file.filename
+        inspection = save_scan_result(
+            db=db,
+            final_report=final_report,
+            uploaded_files=[
+                {
+                    "filename": file.filename,
+                    "file_path": image_path,
+                    "mime_type": file.content_type
+                }
+            ],
+            ocr_results=[
+                ocr_result
+            ]
         )
 
-        return final_report
+        # ----------------------------------------------------
+        # Return existing API response
+        # + database information
+        # ----------------------------------------------------
+
+        response = final_report
+
+        response["inspection"] = {
+            "id": inspection.id,
+            "inspection_code": inspection.inspection_code,
+            "status": inspection.status
+        }
+
+        return response
 
     except Exception as e:
+
+        db.rollback()
 
         return {
             "status": "ERROR",
@@ -202,10 +237,13 @@ async def analyze_label(
 
 @app.post("/analyze-label/multi")
 async def analyze_multiple_labels(
-    files: List[UploadFile] = File(...)
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db)
 ):
 
     image_paths = []
+    uploaded_files = []
+    all_ocr_results = []
 
     try:
 
@@ -252,6 +290,14 @@ async def analyze_multiple_labels(
                 image_path
             )
 
+            uploaded_files.append(
+                {
+                    "filename": file.filename,
+                    "file_path": image_path,
+                    "mime_type": file.content_type
+                }
+            )
+
             image_names.append(
                 file.filename
             )
@@ -264,6 +310,11 @@ async def analyze_multiple_labels(
                 ocr_engine.extract_to_json(
                     image_path
                 )
+            )
+
+            # Keep complete OCR result
+            all_ocr_results.append(
+                ocr_result
             )
 
             # -----------------------------------------------
@@ -311,21 +362,41 @@ async def analyze_multiple_labels(
             rule_engine.generate_final_report()
         )
 
+        final_report[
+            "compliance_report"
+        ]["images"] = image_names
+
+        final_report[
+            "compliance_report"
+        ]["total_images"] = len(files)
+
         # ----------------------------------------------------
-        # ADD IMAGE INFORMATION
+        # SAVE INSPECTION TO DATABASE
         # ----------------------------------------------------
 
-        final_report["compliance_report"][
-            "images"
-        ] = image_names
+        inspection = save_scan_result(
+            db=db,
+            final_report=final_report,
+            uploaded_files=uploaded_files,
+            ocr_results=all_ocr_results,
+            combined_ocr_result=combined_ocr_result
+        )
 
-        final_report["compliance_report"][
-            "total_images"
-        ] = len(files)
+        # ----------------------------------------------------
+        # Add database information
+        # ----------------------------------------------------
+
+        final_report["inspection"] = {
+            "id": inspection.id,
+            "inspection_code": inspection.inspection_code,
+            "status": inspection.status
+        }
 
         return final_report
 
     except Exception as e:
+
+        db.rollback()
 
         return {
             "status": "ERROR",
@@ -350,15 +421,6 @@ async def analyze_multiple_labels(
 
 # ============================================================
 # CUSTOM OPENAPI SCHEMA
-#
-# This changes the generated file-array schema from:
-#
-#     array<string>
-#
-# to the Swagger-compatible:
-#
-#     array of binary files
-#
 # ============================================================
 
 def custom_openapi():
@@ -373,23 +435,51 @@ def custom_openapi():
         routes=app.routes,
     )
 
-    # --------------------------------------------------------
-    # Force OpenAPI 3.0 format
-    # --------------------------------------------------------
-
+    # Force OpenAPI 3.0
     openapi_schema["openapi"] = "3.0.3"
 
+    schemas = (
+        openapi_schema
+        .get("components", {})
+        .get("schemas", {})
+    )
+
     # --------------------------------------------------------
-    # Locate the multi-upload request body
+    # Fix SINGLE image upload
     # --------------------------------------------------------
 
-    schemas = openapi_schema.get(
-        "components",
-        {}
-    ).get(
-        "schemas",
-        {}
+    single_schema_name = (
+        "Body_analyze_label_analyze_label_post"
     )
+
+    single_schema = schemas.get(
+        single_schema_name
+    )
+
+    if single_schema:
+
+        properties = single_schema.get(
+            "properties",
+            {}
+        )
+
+        file_schema = properties.get(
+            "file"
+        )
+
+        if file_schema:
+
+            file_schema["type"] = "string"
+            file_schema["format"] = "binary"
+
+            file_schema.pop(
+                "contentMediaType",
+                None
+            )
+
+    # --------------------------------------------------------
+    # Keep MULTIPLE image upload working
+    # --------------------------------------------------------
 
     multi_schema_name = (
         "Body_analyze_multiple_labels_analyze_label_multi_post"
@@ -412,13 +502,11 @@ def custom_openapi():
 
         if files_schema:
 
-            # Make each array item an actual binary file
             files_schema["items"] = {
                 "type": "string",
                 "format": "binary"
             }
 
-            # Remove OpenAPI 3.1-specific representation
             files_schema.pop(
                 "contentMediaType",
                 None
