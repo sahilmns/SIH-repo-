@@ -64,7 +64,9 @@ function NewInspection() {
 
   const images = inspection.images || [];
 
-  /* ---------------- CAMERA ---------------- */
+  /* ========================================================= */
+  /* CAMERA                                                     */
+  /* ========================================================= */
 
   useEffect(() => {
     return () => {
@@ -139,6 +141,36 @@ function NewInspection() {
     setCameraError("");
   };
 
+  /* ========================================================= */
+  /* REPLACE CURRENT IMAGE                                      */
+  /* ========================================================= */
+
+  const replaceWithImage = (file) => {
+    if (!file || !file.type.startsWith("image/")) {
+      return;
+    }
+
+    /*
+     * Physical inspection supports only one image.
+     * If an image already exists, remove it first.
+     */
+    if (images.length > 0) {
+      removeImage(0);
+    }
+
+    const imageData = {
+      file,
+      preview: URL.createObjectURL(file),
+      name: file.name,
+    };
+
+    addImages([imageData]);
+  };
+
+  /* ========================================================= */
+  /* CAMERA CAPTURE                                             */
+  /* ========================================================= */
+
   const capturePhoto = () => {
     const video = videoRef.current;
 
@@ -152,6 +184,10 @@ function NewInspection() {
     canvas.height = video.videoHeight;
 
     const context = canvas.getContext("2d");
+
+    if (!context) {
+      return;
+    }
 
     context.drawImage(
       video,
@@ -173,13 +209,7 @@ function NewInspection() {
           }
         );
 
-        const imageData = {
-          file,
-          preview: URL.createObjectURL(file),
-          name: file.name,
-        };
-
-        addImages([imageData]);
+        replaceWithImage(file);
 
         closeCamera();
       },
@@ -188,60 +218,78 @@ function NewInspection() {
     );
   };
 
-  /* ---------------- IMAGE UPLOAD ---------------- */
+  /* ========================================================= */
+  /* IMAGE UPLOAD                                               */
+  /* ========================================================= */
 
   const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files || []);
+    const file = event.target.files?.[0];
 
-    if (!files.length) return;
+    if (!file) {
+      return;
+    }
 
-    const imageFiles = files.filter((file) =>
-      file.type.startsWith("image/")
-    );
+    if (!file.type.startsWith("image/")) {
+      alert(
+        "Please select a valid image file."
+      );
 
-    const imageData = imageFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      name: file.name,
-    }));
+      event.target.value = "";
+      return;
+    }
 
-    addImages(imageData);
+    replaceWithImage(file);
 
     event.target.value = "";
   };
 
+  /* ========================================================= */
+  /* DRAG AND DROP                                              */
+  /* ========================================================= */
+
   const handleDrop = (event) => {
     event.preventDefault();
 
-    const files = Array.from(event.dataTransfer.files || []);
+    const file = event.dataTransfer.files?.[0];
 
-    if (!files.length) return;
+    if (!file) {
+      return;
+    }
 
-    const imageFiles = files.filter((file) =>
-      file.type.startsWith("image/")
-    );
+    if (!file.type.startsWith("image/")) {
+      alert(
+        "Please drop a valid image file."
+      );
+      return;
+    }
 
-    const imageData = imageFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      name: file.name,
-    }));
-
-    addImages(imageData);
+    replaceWithImage(file);
   };
 
-  /* ---------------- CONTINUE ---------------- */
+  /* ========================================================= */
+  /* REMOVE IMAGE                                               */
+  /* ========================================================= */
+
+  const handleRemoveImage = (index) => {
+    removeImage(index);
+  };
+
+  /* ========================================================= */
+  /* CONTINUE                                                    */
+  /* ========================================================= */
 
   const handleContinue = () => {
     if (inspectionType === "physical" && images.length === 0) {
       alert(
-        "Please upload at least one package image before continuing."
+        "Please upload one package image before continuing."
       );
       return;
     }
 
     if (inspectionType === "online" && !productUrl.trim()) {
-      alert("Please enter the product URL.");
+      alert(
+        "Please enter the product URL."
+      );
       return;
     }
 
@@ -264,9 +312,12 @@ function NewInspection() {
 
   return (
     <main className="min-h-[calc(100vh-80px)] bg-[#F4F7FA]">
+
       <div className="max-w-[1450px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
 
-        {/* ================= TOP ================= */}
+        {/* ===================================================== */}
+        {/* TOP                                                     */}
+        {/* ===================================================== */}
 
         <div className="mb-7">
 
@@ -281,6 +332,7 @@ function NewInspection() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
 
             <div>
+
               <div className="flex items-center gap-3 mb-2">
 
                 <div className="w-11 h-11 rounded-xl bg-[#06345B] flex items-center justify-center text-white shadow-sm">
@@ -288,6 +340,7 @@ function NewInspection() {
                 </div>
 
                 <div>
+
                   <p className="text-xs uppercase tracking-[0.15em] font-semibold text-[#1769AA]">
                     Inspection Module
                   </p>
@@ -295,6 +348,7 @@ function NewInspection() {
                   <h1 className="text-2xl sm:text-3xl font-bold text-[#102A43]">
                     New Inspection
                   </h1>
+
                 </div>
 
               </div>
@@ -303,16 +357,24 @@ function NewInspection() {
                 Enter product details and provide package evidence
                 for compliance assessment.
               </p>
+
             </div>
 
             <div className="text-xs text-slate-500">
-              Step <span className="font-bold text-[#06345B]">1</span> of 3
+              Step{" "}
+              <span className="font-bold text-[#06345B]">
+                1
+              </span>{" "}
+              of 3
             </div>
 
           </div>
+
         </div>
 
-        {/* ================= STEPPER ================= */}
+        {/* ===================================================== */}
+        {/* STEPPER                                                  */}
+        {/* ===================================================== */}
 
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm mb-7">
 
@@ -329,12 +391,15 @@ function NewInspection() {
                 </div>
 
                 <div className="hidden sm:block">
+
                   <p className="text-sm font-semibold text-[#102A43]">
                     Product Details
                   </p>
+
                   <p className="text-[11px] text-[#1769AA]">
                     Current step
                   </p>
+
                 </div>
 
               </div>
@@ -350,9 +415,11 @@ function NewInspection() {
                 </div>
 
                 <div className="hidden sm:block">
+
                   <p className="text-sm font-medium text-slate-500">
                     Image Review
                   </p>
+
                 </div>
 
               </div>
@@ -368,9 +435,11 @@ function NewInspection() {
                 </div>
 
                 <div className="hidden sm:block">
+
                   <p className="text-sm font-medium text-slate-500">
                     Analysis
                   </p>
+
                 </div>
 
               </div>
@@ -381,7 +450,9 @@ function NewInspection() {
 
         </div>
 
-        {/* ================= INSPECTION SOURCE ================= */}
+        {/* ===================================================== */}
+        {/* INSPECTION SOURCE                                       */}
+        {/* ===================================================== */}
 
         <section className="bg-white border border-slate-200 rounded-xl shadow-sm mb-7 overflow-hidden">
 
@@ -394,6 +465,7 @@ function NewInspection() {
               </div>
 
               <div>
+
                 <h2 className="font-bold text-[#102A43]">
                   Inspection Source
                 </h2>
@@ -401,6 +473,7 @@ function NewInspection() {
                 <p className="text-xs text-slate-500 mt-0.5">
                   Select how the product will be inspected.
                 </p>
+
               </div>
 
             </div>
@@ -415,7 +488,9 @@ function NewInspection() {
 
               <button
                 type="button"
-                onClick={() => setInspectionType("physical")}
+                onClick={() =>
+                  setInspectionType("physical")
+                }
                 className={`text-left rounded-xl border p-4 transition-all ${
                   inspectionType === "physical"
                     ? "border-[#1769AA] bg-blue-50/60 ring-1 ring-[#1769AA]"
@@ -454,7 +529,7 @@ function NewInspection() {
 
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                       Inspect a product available physically by
-                      uploading or capturing package images.
+                      uploading or capturing one package image.
                     </p>
 
                   </div>
@@ -467,7 +542,9 @@ function NewInspection() {
 
               <button
                 type="button"
-                onClick={() => setInspectionType("online")}
+                onClick={() =>
+                  setInspectionType("online")
+                }
                 className={`text-left rounded-xl border p-4 transition-all ${
                   inspectionType === "online"
                     ? "border-[#1769AA] bg-blue-50/60 ring-1 ring-[#1769AA]"
@@ -557,12 +634,14 @@ function NewInspection() {
         </section>
 
         {/* ===================================================== */}
-        {/* PRODUCT INFORMATION + IMAGE UPLOAD                  */}
+        {/* PRODUCT INFORMATION + IMAGE UPLOAD                     */}
         {/* ===================================================== */}
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
 
-          {/* ================= PRODUCT INFORMATION ================= */}
+          {/* =================================================== */}
+          {/* PRODUCT INFORMATION                                  */}
+          {/* =================================================== */}
 
           <section className="lg:col-span-3 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
 
@@ -600,7 +679,9 @@ function NewInspection() {
 
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Product Name
-                    <span className="text-red-500 ml-1">*</span>
+                    <span className="text-red-500 ml-1">
+                      *
+                    </span>
                   </label>
 
                   <input
@@ -748,7 +829,7 @@ function NewInspection() {
 
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                       These details help organize the inspection.
-                      The uploaded package images will be processed
+                      The uploaded package image will be processed
                       separately for automated text extraction and
                       compliance assessment.
                     </p>
@@ -763,7 +844,9 @@ function NewInspection() {
 
           </section>
 
-          {/* ================= IMAGE UPLOAD ================= */}
+          {/* =================================================== */}
+          {/* IMAGE UPLOAD                                         */}
+          {/* =================================================== */}
 
           <section className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden lg:sticky lg:top-6">
 
@@ -784,7 +867,7 @@ function NewInspection() {
                     </h2>
 
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Upload clear package images.
+                      Upload one clear package image.
                     </p>
 
                   </div>
@@ -792,8 +875,7 @@ function NewInspection() {
                 </div>
 
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-                  {images.length}{" "}
-                  {images.length === 1 ? "image" : "images"}
+                  {images.length} / 1 image
                 </span>
 
               </div>
@@ -822,11 +904,13 @@ function NewInspection() {
                 </div>
 
                 <h3 className="mt-4 text-sm font-bold text-[#102A43]">
-                  Upload package images
+                  {images.length === 0
+                    ? "Upload package image"
+                    : "Replace package image"}
                 </h3>
 
                 <p className="text-xs text-slate-500 mt-1 max-w-[240px] leading-relaxed">
-                  Drag and drop images here or click to browse
+                  Drag and drop an image here or click to browse
                   from your device.
                 </p>
 
@@ -840,7 +924,6 @@ function NewInspection() {
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
-                multiple
                 onChange={handleImageUpload}
                 className="hidden"
               />
@@ -857,7 +940,9 @@ function NewInspection() {
                   className="h-10 rounded-lg bg-[#06345B] text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#082f4f] transition"
                 >
                   <Upload size={16} />
-                  Browse
+                  {images.length === 0
+                    ? "Browse"
+                    : "Replace"}
                 </button>
 
                 <button
@@ -871,7 +956,7 @@ function NewInspection() {
 
               </div>
 
-              {/* Image previews */}
+              {/* Image preview */}
 
               {images.length > 0 && (
                 <div className="mt-5">
@@ -883,23 +968,23 @@ function NewInspection() {
                     </p>
 
                     <p className="text-xs text-slate-400">
-                      {images.length} added
+                      1 image added
                     </p>
 
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
 
-                    {images.map((image, index) => (
+                    {images.slice(0, 1).map((image, index) => (
 
                       <div
                         key={`${image.name}-${index}`}
-                        className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 bg-slate-100 group"
+                        className="relative aspect-video rounded-lg overflow-hidden border border-slate-200 bg-slate-100 group"
                       >
 
                         <img
                           src={image.preview}
-                          alt={`Package evidence ${index + 1}`}
+                          alt="Package evidence"
                           className="w-full h-full object-cover"
                         />
 
@@ -907,16 +992,16 @@ function NewInspection() {
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation();
-                            removeImage(index);
+                            handleRemoveImage(index);
                           }}
-                          className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/95 text-red-600 shadow-sm flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition"
-                          aria-label={`Remove image ${index + 1}`}
+                          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/95 text-red-600 shadow-sm flex items-center justify-center opacity-100 transition"
+                          aria-label="Remove package image"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={15} />
                         </button>
 
                         <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-2 py-1 truncate">
-                          {index + 1}. {image.name}
+                          {image.name}
                         </div>
 
                       </div>
@@ -981,7 +1066,9 @@ function NewInspection() {
 
         </div>
 
-        {/* ================= BOTTOM ACTION ================= */}
+        {/* ===================================================== */}
+        {/* BOTTOM ACTION                                           */}
+        {/* ===================================================== */}
 
         <div className="mt-6 bg-white border border-slate-200 rounded-xl shadow-sm">
 
@@ -994,15 +1081,15 @@ function NewInspection() {
               </p>
 
               <p className="text-xs text-slate-500 mt-1">
+
                 {inspectionType === "physical"
                   ? images.length > 0
-                    ? `${images.length} package image${
-                        images.length > 1 ? "s" : ""
-                      } ready for review.`
-                    : "Upload at least one package image to continue."
+                    ? "1 package image ready for review."
+                    : "Upload one package image to continue."
                   : productUrl
                     ? "Product URL is ready for review."
                     : "Enter a product URL to continue."}
+
               </p>
 
             </div>
@@ -1012,6 +1099,7 @@ function NewInspection() {
               onClick={handleContinue}
               className="w-full sm:w-auto min-w-[210px] h-11 px-6 rounded-lg bg-[#06345B] hover:bg-[#082f4f] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all"
             >
+
               {inspectionType === "physical"
                 ? "Continue to Image Review"
                 : "Continue to Product Review"}
@@ -1037,7 +1125,7 @@ function NewInspection() {
       </div>
 
       {/* ===================================================== */}
-      {/* CAMERA MODAL                                          */}
+      {/* CAMERA MODAL                                            */}
       {/* ===================================================== */}
 
       {cameraOpen && (
