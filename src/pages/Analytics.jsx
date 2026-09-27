@@ -23,49 +23,6 @@ const API_URL =
 
 
 // ============================================================
-// DEMO GRAPH DATA
-//
-// These values are used ONLY for the visual analytics charts.
-// They are NOT added to the database and do NOT affect the
-// actual inspection count or compliance statistics.
-// ============================================================
-
-const demoAnalyticsData = {
-  monthlyInspections: [
-    { month: "Mar", inspections: 4 },
-    { month: "Apr", inspections: 5 },
-    { month: "May", inspections: 3 },
-    { month: "Jun", inspections: 6 },
-    { month: "Jul", inspections: 4 },
-    { month: "Aug", inspections: 6 },
-  ],
-
-  violationCategories: [
-    {
-      name: "Mandatory declarations",
-      count: 4,
-    },
-    {
-      name: "MRP declaration",
-      count: 2,
-    },
-    {
-      name: "Net quantity",
-      count: 1,
-    },
-    {
-      name: "Consumer care details",
-      count: 1,
-    },
-    {
-      name: "Other",
-      count: 0,
-    },
-  ],
-};
-
-
-// ============================================================
 // STATUS NORMALIZATION
 // ============================================================
 
@@ -116,6 +73,9 @@ function Analytics() {
   const [databaseInspections, setDatabaseInspections] =
     useState([]);
 
+  const [ruleResults, setRuleResults] =
+    useState([]);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -124,16 +84,20 @@ function Analytics() {
 
 
   // ==========================================================
-  // FETCH REAL INSPECTIONS
+  // FETCH REAL INSPECTIONS + RULE RESULTS
   // ==========================================================
 
   useEffect(() => {
     let cancelled = false;
 
-    const fetchInspections = async () => {
+    const fetchAnalyticsData = async () => {
       try {
         setLoading(true);
         setError("");
+
+        // ----------------------------------------------------
+        // Fetch all inspections
+        // ----------------------------------------------------
 
         const response = await fetch(
           `${API_URL}/inspections`
@@ -147,16 +111,76 @@ function Analytics() {
 
         const data = await response.json();
 
-        if (!cancelled) {
-          setDatabaseInspections(
-            Array.isArray(data?.inspections)
-              ? data.inspections
-              : []
-          );
+        const inspections =
+          Array.isArray(data?.inspections)
+            ? data.inspections
+            : [];
+
+        if (cancelled) return;
+
+        setDatabaseInspections(inspections);
+
+
+        // ----------------------------------------------------
+        // Fetch detailed data for every inspection
+        // ----------------------------------------------------
+
+        if (inspections.length === 0) {
+          setRuleResults([]);
+          return;
         }
+
+
+        const detailResponses =
+          await Promise.all(
+            inspections.map(async (inspection) => {
+              try {
+                const detailResponse =
+                  await fetch(
+                    `${API_URL}/inspections/${inspection.id}`
+                  );
+
+                if (!detailResponse.ok) {
+                  return null;
+                }
+
+                return await detailResponse.json();
+
+              } catch (detailError) {
+                console.error(
+                  `Failed to fetch inspection ${inspection.id}:`,
+                  detailError
+                );
+
+                return null;
+              }
+            })
+          );
+
+
+        // ----------------------------------------------------
+        // Extract rule results
+        // ----------------------------------------------------
+
+        const allRuleResults =
+          detailResponses
+            .filter(Boolean)
+            .flatMap((inspection) =>
+              Array.isArray(
+                inspection?.rule_results
+              )
+                ? inspection.rule_results
+                : []
+            );
+
+
+        if (!cancelled) {
+          setRuleResults(allRuleResults);
+        }
+
       } catch (err) {
         console.error(
-          "Analytics inspection fetch error:",
+          "Analytics data fetch error:",
           err
         );
 
@@ -166,7 +190,9 @@ function Analytics() {
           );
 
           setDatabaseInspections([]);
+          setRuleResults([]);
         }
+
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -174,120 +200,253 @@ function Analytics() {
       }
     };
 
-    fetchInspections();
+
+    fetchAnalyticsData();
+
 
     return () => {
       cancelled = true;
     };
+
   }, []);
 
 
   // ==========================================================
-  // BUILD ANALYTICS DATA
-  //
-  // IMPORTANT:
-  //
-  // Summary statistics come from the REAL DATABASE.
-  //
-  // Graphs use DEMO DATA for presentation purposes.
+  // BUILD REAL ANALYTICS DATA
   // ==========================================================
 
   const analyticsData = useMemo(() => {
 
     // --------------------------------------------------------
-    // REAL DATABASE STATUS COUNTS
+    // STATUS COUNTS
     // --------------------------------------------------------
 
     let realCompliant = 0;
     let realReview = 0;
     let realViolations = 0;
 
+
     databaseInspections.forEach((inspection) => {
+
       const status = normalizeStatus(
         inspection?.overall_status ||
         inspection?.status
       );
 
+
       if (status === "COMPLIANT") {
         realCompliant += 1;
+
       } else if (status === "VIOLATION") {
         realViolations += 1;
+
       } else {
         realReview += 1;
       }
+
     });
 
 
     // --------------------------------------------------------
-    // REAL DATABASE TOTAL
+    // TOTAL
     // --------------------------------------------------------
 
     const totalInspections =
       databaseInspections.length;
 
+
     const compliant =
       realCompliant;
 
+
     const potentialViolations =
       realViolations;
+
 
     const needsReview =
       realReview;
 
 
     // --------------------------------------------------------
-    // REAL DATABASE COMPLIANCE RATE
+    // REAL COMPLIANCE RATE
+    //
+    // Uses each inspection's actual compliance_percentage.
     // --------------------------------------------------------
 
+    const validComplianceValues =
+      databaseInspections
+        .map((inspection) =>
+          Number(
+            inspection?.compliance_percentage
+          )
+        )
+        .filter(
+          (value) =>
+            Number.isFinite(value)
+        );
+
+
     const complianceRate =
-      totalInspections > 0
+      validComplianceValues.length > 0
         ? Number(
             (
-              (compliant / totalInspections) *
-              100
+              validComplianceValues.reduce(
+                (sum, value) =>
+                  sum + value,
+                0
+              ) /
+              validComplianceValues.length
             ).toFixed(1)
           )
         : 0;
 
 
     // --------------------------------------------------------
-    // DEMO MONTHLY GRAPH
-    //
-    // This is intentionally NOT connected to the database.
+    // REAL MONTHLY INSPECTION GRAPH
     // --------------------------------------------------------
+
+    const monthlyMap = {};
+
+
+    databaseInspections.forEach(
+      (inspection) => {
+
+        if (!inspection?.created_at) {
+          return;
+        }
+
+
+        const date =
+          new Date(
+            inspection.created_at
+          );
+
+
+        if (
+          Number.isNaN(
+            date.getTime()
+          )
+        ) {
+          return;
+        }
+
+
+        const year =
+          date.getFullYear();
+
+
+        const month =
+          date.getMonth();
+
+
+        const key =
+          `${year}-${String(
+            month + 1
+          ).padStart(2, "0")}`;
+
+
+        if (!monthlyMap[key]) {
+
+          monthlyMap[key] = {
+            key,
+            month: date.toLocaleDateString(
+              "en-IN",
+              {
+                month: "short",
+              }
+            ),
+            year,
+            inspections: 0,
+          };
+
+        }
+
+
+        monthlyMap[key].inspections += 1;
+
+      }
+    );
+
 
     const monthlyInspections =
-      demoAnalyticsData.monthlyInspections;
+      Object.values(monthlyMap)
+        .sort((a, b) =>
+          a.key.localeCompare(
+            b.key
+          )
+        );
 
 
     // --------------------------------------------------------
-    // DEMO VIOLATION GRAPH
+    // REAL VIOLATION CATEGORIES
     //
-    // This is intentionally NOT connected to the database.
+    // Count actual rule_results whose status is VIOLATION.
     // --------------------------------------------------------
 
-    const totalViolationCategoryCount =
-      demoAnalyticsData.violationCategories.reduce(
-        (sum, item) =>
-          sum + item.count,
+    const violationMap = {};
+
+
+    ruleResults.forEach((rule) => {
+
+      const status =
+        normalizeStatus(
+          rule?.status
+        );
+
+
+      if (status !== "VIOLATION") {
+        return;
+      }
+
+
+      const ruleName =
+        rule?.rule_name ||
+        rule?.rule_code ||
+        "Unknown rule";
+
+
+      if (!violationMap[ruleName]) {
+        violationMap[ruleName] = 0;
+      }
+
+
+      violationMap[ruleName] += 1;
+
+    });
+
+
+    const totalViolationCount =
+      Object.values(
+        violationMap
+      ).reduce(
+        (sum, count) =>
+          sum + count,
         0
       );
 
-    const violationCategories =
-      demoAnalyticsData.violationCategories.map(
-        (item) => ({
-          ...item,
 
-          percentage:
-            totalViolationCategoryCount > 0
-              ? Math.round(
-                  (item.count /
-                    totalViolationCategoryCount) *
-                    100
-                )
-              : 0,
-        })
-      );
+    const violationCategories =
+      Object.entries(
+        violationMap
+      )
+        .map(
+          ([name, count]) => ({
+            name,
+            count,
+            percentage:
+              totalViolationCount > 0
+                ? Math.round(
+                    (count /
+                      totalViolationCount) *
+                      100
+                  )
+                : 0,
+          })
+        )
+        .sort(
+          (a, b) =>
+            b.count - a.count
+        );
 
 
     return {
@@ -300,7 +459,10 @@ function Analytics() {
       violationCategories,
     };
 
-  }, [databaseInspections]);
+  }, [
+    databaseInspections,
+    ruleResults,
+  ]);
 
 
   // ============================================================
@@ -326,7 +488,8 @@ function Analytics() {
     monthlyInspections.length > 0
       ? Math.max(
           ...monthlyInspections.map(
-            (item) => item.inspections
+            (item) =>
+              item.inspections
           )
         )
       : 1;
@@ -497,7 +660,7 @@ function Analytics() {
           <div className="flex items-center gap-2 mt-4">
 
             <span className="text-sm font-medium text-green-600">
-              {compliant} verified compliant
+              Average compliance score
             </span>
 
           </div>
@@ -614,7 +777,7 @@ function Analytics() {
 
 
         {/* ----------------------------------------------------
-            INSPECTION TREND
+            REAL INSPECTION TREND
         ---------------------------------------------------- */}
 
         <div
@@ -649,58 +812,78 @@ function Analytics() {
           </div>
 
 
-          {/* Bar Chart */}
+          {/* Real Bar Chart */}
 
-          <div className="h-64 flex items-end justify-between gap-4 px-2">
+          {monthlyInspections.length === 0 ? (
 
-            {monthlyInspections.map((item) => {
+            <div className="h-64 flex items-center justify-center">
 
-              const height =
-                maxMonthlyInspections > 0
-                  ? (item.inspections /
-                      maxMonthlyInspections) *
-                    100
-                  : 0;
+              <p className="text-sm text-slate-400">
+                No inspection data available yet.
+              </p>
 
-              return (
-                <div
-                  key={item.month}
-                  className="flex-1 h-full flex flex-col
-                             items-center justify-end gap-3"
-                >
+            </div>
 
-                  <span className="text-xs font-semibold text-slate-600">
-                    {item.inspections}
-                  </span>
+          ) : (
 
+            <div className="h-64 flex items-end justify-between gap-4 px-2">
+
+              {monthlyInspections.map((item) => {
+
+                const height =
+                  maxMonthlyInspections > 0
+                    ? (item.inspections /
+                        maxMonthlyInspections) *
+                      100
+                    : 0;
+
+
+                return (
                   <div
-                    className="w-full max-w-10
-                               bg-blue-500
-                               rounded-t-lg
-                               hover:bg-blue-600
-                               transition-all duration-200"
-                    style={{
-                      height: `${height}%`,
-                    }}
-                    title={`${item.inspections} inspections`}
-                  ></div>
+                    key={item.key}
+                    className="flex-1 h-full flex flex-col
+                               items-center justify-end gap-3"
+                  >
 
-                  <span className="text-xs text-slate-500">
-                    {item.month}
-                  </span>
+                    <span className="text-xs font-semibold text-slate-600">
+                      {item.inspections}
+                    </span>
 
-                </div>
-              );
 
-            })}
+                    <div
+                      className="w-full max-w-10
+                                 bg-blue-500
+                                 rounded-t-lg
+                                 hover:bg-blue-600
+                                 transition-all duration-200"
+                      style={{
+                        height: `${Math.max(
+                          height,
+                          5
+                        )}%`,
+                      }}
+                      title={`${item.inspections} inspections`}
+                    ></div>
 
-          </div>
+
+                    <span className="text-xs text-slate-500">
+                      {item.month}
+                    </span>
+
+                  </div>
+                );
+
+              })}
+
+            </div>
+
+          )}
 
         </div>
 
 
         {/* ----------------------------------------------------
-            COMPLIANCE BREAKDOWN
+            REAL COMPLIANCE BREAKDOWN
         ---------------------------------------------------- */}
 
         <div
@@ -746,18 +929,34 @@ function Analytics() {
                          flex items-center justify-center"
               style={{
                 background: `conic-gradient(
-                  #22c55e 0% ${complianceRate}%,
-                  #f59e0b ${complianceRate}% ${
-                    complianceRate +
-                    (needsReview /
-                      Math.max(totalInspections, 1)) *
-                      100
+                  #22c55e 0% ${
+                    totalInspections > 0
+                      ? (compliant /
+                          totalInspections) *
+                        100
+                      : 0
+                  }%,
+                  #f59e0b ${
+                    totalInspections > 0
+                      ? (compliant /
+                          totalInspections) *
+                        100
+                      : 0
+                  }% ${
+                    totalInspections > 0
+                      ? ((compliant +
+                          needsReview) /
+                          totalInspections) *
+                        100
+                      : 0
                   }%,
                   #ef4444 ${
-                    complianceRate +
-                    (needsReview /
-                      Math.max(totalInspections, 1)) *
-                      100
+                    totalInspections > 0
+                      ? ((compliant +
+                          needsReview) /
+                          totalInspections) *
+                        100
+                      : 0
                   }% 100%
                 )`,
               }}
@@ -776,7 +975,7 @@ function Analytics() {
                 </span>
 
                 <span className="text-xs text-slate-500">
-                  Compliant
+                  Avg. Score
                 </span>
 
               </div>
@@ -854,7 +1053,7 @@ function Analytics() {
 
 
       {/* ======================================================
-          COMMON VIOLATIONS
+          REAL COMMON VIOLATIONS
       ====================================================== */}
 
       <section>
@@ -887,41 +1086,63 @@ function Analytics() {
           </div>
 
 
-          <div className="space-y-5">
+          {violationCategories.length === 0 ? (
 
-            {violationCategories.map((item) => (
+            <div className="py-8 text-center">
 
-              <div key={item.name}>
+              <CheckCircle2
+                size={30}
+                className="mx-auto text-green-500"
+              />
 
-                <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-slate-400 mt-3">
+                No rule violations recorded yet.
+              </p>
 
-                  <span className="text-sm font-medium text-slate-700">
-                    {item.name}
-                  </span>
+            </div>
 
-                  <span className="text-sm font-semibold text-slate-900">
-                    {item.count}
-                  </span>
+          ) : (
+
+            <div className="space-y-5">
+
+              {violationCategories.map((item) => (
+
+                <div key={item.name}>
+
+                  <div className="flex items-center justify-between mb-2">
+
+                    <span className="text-sm font-medium text-slate-700">
+                      {item.name}
+                    </span>
+
+                    <span className="text-sm font-semibold text-slate-900">
+                      {item.count}
+                    </span>
+
+                  </div>
+
+
+                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+
+                    <div
+                      className="h-full bg-red-500 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.max(
+                          item.percentage,
+                          4
+                        )}%`,
+                      }}
+                    ></div>
+
+                  </div>
 
                 </div>
 
+              ))}
 
-                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            </div>
 
-                  <div
-                    className="h-full bg-red-500 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${item.percentage}%`,
-                    }}
-                  ></div>
-
-                </div>
-
-              </div>
-
-            ))}
-
-          </div>
+          )}
 
         </div>
 
@@ -935,18 +1156,24 @@ function Analytics() {
       <div className="mt-6 text-center">
 
         {loading ? (
+
           <p className="text-xs text-slate-400">
             Loading live inspection data...
           </p>
+
         ) : error ? (
-          <p className="text-xs text-amber-500">
-            {error} Showing demo analytics data.
+
+          <p className="text-xs text-red-500">
+            {error}
           </p>
+
         ) : (
+
           <p className="text-xs text-slate-400">
             Analytics summary is based on{" "}
             {databaseInspections.length} live inspections.
           </p>
+
         )}
 
       </div>
