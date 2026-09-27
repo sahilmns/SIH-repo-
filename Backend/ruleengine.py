@@ -79,9 +79,13 @@ class LegalMetrologyOCREngine:
     "detections": entries
 }
 
-image_path = r"D:\Programming\Python\glucond.jpeg"
-test_case = LegalMetrologyOCREngine()
-result = test_case.extract_to_json(image_path)
+if __name__ == "__main__":
+    image_path = r"D:\Programming\Python\glucond.jpeg"
+
+    test_case = LegalMetrologyOCREngine()
+
+    result = test_case.extract_to_json(image_path)
+    # print(result)
 
 # for detection in result["detections"]:
 #     print(repr(detection["text"]))
@@ -6479,7 +6483,7 @@ test_engine = LegalMetrologyRuleEngine(result)
 # print(test_engine.check_best_before_use_by())
 # print(test_engine.check_country_of_origin())
 # print(test_engine.check_consumer_care())
-print(test_engine.check_product_name())
+# print(test_engine.check_product_name())
 # print(test_engine.check_unit_of_measurement())
 # print(test_engine.check_date_validity())
 # print(test_engine.check_dimensions())
