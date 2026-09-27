@@ -11,58 +11,98 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 
 
 // ============================================================
-// DEMO DATA
-// Later this can be replaced with data received from the API.
-// Keep the UI below independent from where the data comes from.
+// API
 // ============================================================
 
-const analyticsData = {
-  totalInspections: 128,
-  compliant: 94,
-  potentialViolations: 13,
-  needsReview: 21,
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-  complianceRate: 73.4,
 
+// ============================================================
+// DEMO GRAPH DATA
+//
+// These values are used ONLY for the visual analytics charts.
+// They are NOT added to the database and do NOT affect the
+// actual inspection count or compliance statistics.
+// ============================================================
+
+const demoAnalyticsData = {
   monthlyInspections: [
-    { month: "Mar", inspections: 18 },
-    { month: "Apr", inspections: 24 },
-    { month: "May", inspections: 20 },
-    { month: "Jun", inspections: 27 },
-    { month: "Jul", inspections: 17 },
-    { month: "Aug", inspections: 22 },
+    { month: "Mar", inspections: 4 },
+    { month: "Apr", inspections: 5 },
+    { month: "May", inspections: 3 },
+    { month: "Jun", inspections: 6 },
+    { month: "Jul", inspections: 4 },
+    { month: "Aug", inspections: 6 },
   ],
 
   violationCategories: [
     {
       name: "Mandatory declarations",
-      count: 6,
-      percentage: 46,
+      count: 4,
     },
     {
       name: "MRP declaration",
-      count: 3,
-      percentage: 23,
+      count: 2,
     },
     {
       name: "Net quantity",
-      count: 2,
-      percentage: 15,
+      count: 1,
     },
     {
       name: "Consumer care details",
       count: 1,
-      percentage: 8,
     },
     {
       name: "Other",
-      count: 1,
-      percentage: 8,
+      count: 0,
     },
   ],
+};
+
+
+// ============================================================
+// STATUS NORMALIZATION
+// ============================================================
+
+const normalizeStatus = (status) => {
+  if (!status) return "REVIEW";
+
+  const value = String(status)
+    .trim()
+    .toUpperCase()
+    .replace(/[-\s]+/g, "_");
+
+  if (
+    [
+      "PASS",
+      "PASSED",
+      "COMPLIANT",
+      "VERIFIED_COMPLIANT",
+      "COMPLIANT_WITH_ALL_CHECKS",
+    ].includes(value)
+  ) {
+    return "COMPLIANT";
+  }
+
+  if (
+    [
+      "VIOLATION",
+      "VIOLATIONS",
+      "FAILED",
+      "FAIL",
+      "NON_COMPLIANT",
+      "NON-COMPLIANT",
+    ].includes(value)
+  ) {
+    return "VIOLATION";
+  }
+
+  return "REVIEW";
 };
 
 
@@ -72,6 +112,200 @@ const analyticsData = {
 
 function Analytics() {
   const navigate = useNavigate();
+
+  const [databaseInspections, setDatabaseInspections] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+
+  // ==========================================================
+  // FETCH REAL INSPECTIONS
+  // ==========================================================
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchInspections = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          `${API_URL}/inspections`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch inspections (${response.status})`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setDatabaseInspections(
+            Array.isArray(data?.inspections)
+              ? data.inspections
+              : []
+          );
+        }
+      } catch (err) {
+        console.error(
+          "Analytics inspection fetch error:",
+          err
+        );
+
+        if (!cancelled) {
+          setError(
+            "Unable to load live inspection data."
+          );
+
+          setDatabaseInspections([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchInspections();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
+  // ==========================================================
+  // BUILD ANALYTICS DATA
+  //
+  // IMPORTANT:
+  //
+  // Summary statistics come from the REAL DATABASE.
+  //
+  // Graphs use DEMO DATA for presentation purposes.
+  // ==========================================================
+
+  const analyticsData = useMemo(() => {
+
+    // --------------------------------------------------------
+    // REAL DATABASE STATUS COUNTS
+    // --------------------------------------------------------
+
+    let realCompliant = 0;
+    let realReview = 0;
+    let realViolations = 0;
+
+    databaseInspections.forEach((inspection) => {
+      const status = normalizeStatus(
+        inspection?.overall_status ||
+        inspection?.status
+      );
+
+      if (status === "COMPLIANT") {
+        realCompliant += 1;
+      } else if (status === "VIOLATION") {
+        realViolations += 1;
+      } else {
+        realReview += 1;
+      }
+    });
+
+
+    // --------------------------------------------------------
+    // REAL DATABASE TOTAL
+    // --------------------------------------------------------
+
+    const totalInspections =
+      databaseInspections.length;
+
+    const compliant =
+      realCompliant;
+
+    const potentialViolations =
+      realViolations;
+
+    const needsReview =
+      realReview;
+
+
+    // --------------------------------------------------------
+    // REAL DATABASE COMPLIANCE RATE
+    // --------------------------------------------------------
+
+    const complianceRate =
+      totalInspections > 0
+        ? Number(
+            (
+              (compliant / totalInspections) *
+              100
+            ).toFixed(1)
+          )
+        : 0;
+
+
+    // --------------------------------------------------------
+    // DEMO MONTHLY GRAPH
+    //
+    // This is intentionally NOT connected to the database.
+    // --------------------------------------------------------
+
+    const monthlyInspections =
+      demoAnalyticsData.monthlyInspections;
+
+
+    // --------------------------------------------------------
+    // DEMO VIOLATION GRAPH
+    //
+    // This is intentionally NOT connected to the database.
+    // --------------------------------------------------------
+
+    const totalViolationCategoryCount =
+      demoAnalyticsData.violationCategories.reduce(
+        (sum, item) =>
+          sum + item.count,
+        0
+      );
+
+    const violationCategories =
+      demoAnalyticsData.violationCategories.map(
+        (item) => ({
+          ...item,
+
+          percentage:
+            totalViolationCategoryCount > 0
+              ? Math.round(
+                  (item.count /
+                    totalViolationCategoryCount) *
+                    100
+                )
+              : 0,
+        })
+      );
+
+
+    return {
+      totalInspections,
+      compliant,
+      potentialViolations,
+      needsReview,
+      complianceRate,
+      monthlyInspections,
+      violationCategories,
+    };
+
+  }, [databaseInspections]);
+
+
+  // ============================================================
+  // DESTRUCTURE
+  // ============================================================
 
   const {
     totalInspections,
@@ -84,11 +318,23 @@ function Analytics() {
   } = analyticsData;
 
 
-  // Find highest value for chart scaling.
-  const maxMonthlyInspections = Math.max(
-    ...monthlyInspections.map((item) => item.inspections)
-  );
+  // ============================================================
+  // CHART SCALING
+  // ============================================================
 
+  const maxMonthlyInspections =
+    monthlyInspections.length > 0
+      ? Math.max(
+          ...monthlyInspections.map(
+            (item) => item.inspections
+          )
+        )
+      : 1;
+
+
+  // ============================================================
+  // UI
+  // ============================================================
 
   return (
     <main className="p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
@@ -410,7 +656,11 @@ function Analytics() {
             {monthlyInspections.map((item) => {
 
               const height =
-                (item.inspections / maxMonthlyInspections) * 100;
+                maxMonthlyInspections > 0
+                  ? (item.inspections /
+                      maxMonthlyInspections) *
+                    100
+                  : 0;
 
               return (
                 <div
@@ -497,8 +747,18 @@ function Analytics() {
               style={{
                 background: `conic-gradient(
                   #22c55e 0% ${complianceRate}%,
-                  #f59e0b ${complianceRate}% 89.8%,
-                  #ef4444 89.8% 100%
+                  #f59e0b ${complianceRate}% ${
+                    complianceRate +
+                    (needsReview /
+                      Math.max(totalInspections, 1)) *
+                      100
+                  }%,
+                  #ef4444 ${
+                    complianceRate +
+                    (needsReview /
+                      Math.max(totalInspections, 1)) *
+                      100
+                  }% 100%
                 )`,
               }}
             >
@@ -669,15 +929,25 @@ function Analytics() {
 
 
       {/* ======================================================
-          PROTOTYPE NOTE
+          DATA STATUS
       ====================================================== */}
 
       <div className="mt-6 text-center">
 
-        <p className="text-xs text-slate-400">
-          Analytics shown using prototype data. Final values will
-          be populated from the inspection backend.
-        </p>
+        {loading ? (
+          <p className="text-xs text-slate-400">
+            Loading live inspection data...
+          </p>
+        ) : error ? (
+          <p className="text-xs text-amber-500">
+            {error} Showing demo analytics data.
+          </p>
+        ) : (
+          <p className="text-xs text-slate-400">
+            Analytics summary is based on{" "}
+            {databaseInspections.length} live inspections.
+          </p>
+        )}
 
       </div>
 

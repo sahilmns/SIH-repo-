@@ -2,22 +2,30 @@ import { createContext, useContext, useState } from "react";
 
 const InspectionContext = createContext();
 
+const initialInspection = {
+  inspectionType: "physical",
+
+  productName: "",
+  brandName: "",
+  category: "",
+  mrp: "",
+  netQuantity: "",
+  productUrl: "",
+
+  // Single image only
+  images: [],
+
+  analysis: null,
+  complianceResult: null,
+
+  // Backend inspection information
+  backendInspectionId: null,
+  inspectionCode: null,
+  inspectionStatus: null,
+};
+
 export function InspectionProvider({ children }) {
-  const [inspection, setInspection] = useState({
-    inspectionType: "physical",
-
-    productName: "",
-    brandName: "",
-    category: "",
-    mrp: "",
-    netQuantity: "",
-    productUrl: "",
-
-    images: [],
-
-    analysis: null,
-    complianceResult: null,
-  });
+  const [inspection, setInspection] = useState(initialInspection);
 
   // Update inspection details
   const updateInspection = (data) => {
@@ -27,15 +35,24 @@ export function InspectionProvider({ children }) {
     }));
   };
 
-  // Add new images
+  // --------------------------------------------------
+  // SINGLE IMAGE ONLY
+  // --------------------------------------------------
+  // Any image added replaces the existing image.
   const addImages = (newImages) => {
+    if (!newImages || newImages.length === 0) {
+      return;
+    }
+
+    const image = newImages[0];
+
     setInspection((prev) => ({
       ...prev,
-      images: [...prev.images, ...newImages],
+      images: [image],
     }));
   };
 
-  // Remove an image
+  // Remove the only image
   const removeImage = (index) => {
     setInspection((prev) => ({
       ...prev,
@@ -43,32 +60,38 @@ export function InspectionProvider({ children }) {
     }));
   };
 
-  // Replace an image
+  // Replace the only image
   const replaceImage = (index, newImage) => {
-    setInspection((prev) => ({
-      ...prev,
-      images: prev.images.map((image, i) =>
-        i === index ? newImage : image
-      ),
-    }));
+    if (!newImage) {
+      return;
+    }
+
+    setInspection((prev) => {
+      const images = [...prev.images];
+
+      if (images.length === 0) {
+        return {
+          ...prev,
+          images: [newImage],
+        };
+      }
+
+      images[0] = newImage;
+
+      return {
+        ...prev,
+        images: images.slice(0, 1),
+      };
+    });
   };
 
-  // Reset inspection
+  // --------------------------------------------------
+  // RESET
+  // --------------------------------------------------
   const resetInspection = () => {
     setInspection({
-      inspectionType: "physical",
-
-      productName: "",
-      brandName: "",
-      category: "",
-      mrp: "",
-      netQuantity: "",
-      productUrl: "",
-
+      ...initialInspection,
       images: [],
-
-      analysis: null,
-      complianceResult: null,
     });
   };
 

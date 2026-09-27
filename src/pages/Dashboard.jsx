@@ -26,6 +26,10 @@ import {
 import { useNavigate } from "react-router-dom";
 
 
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+
 /* =========================================================
    HERO SLIDES
 ========================================================= */
@@ -167,6 +171,83 @@ function Dashboard() {
 
 
   /* =========================================================
+     REAL DASHBOARD STATISTICS
+  ========================================================== */
+
+  const [dashboardStats, setDashboardStats] = useState({
+    total_inspections: 0,
+    compliant: 0,
+    needs_review: 0,
+    potential_violations: 0,
+  });
+
+  const [statsLoading, setStatsLoading] = useState(true);
+
+
+  /* =========================================================
+     LOAD DASHBOARD STATISTICS
+  ========================================================== */
+
+  useEffect(() => {
+
+    const loadDashboardStats = async () => {
+
+      try {
+
+        setStatsLoading(true);
+
+        const response = await fetch(
+          `${API_URL}/dashboard/stats`
+        );
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Failed to load dashboard statistics (${response.status})`
+          );
+
+        }
+
+        const data = await response.json();
+
+        setDashboardStats({
+
+          total_inspections:
+            Number(data.total_inspections) || 0,
+
+          compliant:
+            Number(data.compliant) || 0,
+
+          needs_review:
+            Number(data.needs_review) || 0,
+
+          potential_violations:
+            Number(data.potential_violations) || 0,
+
+        });
+
+      } catch (error) {
+
+        console.error(
+          "Failed to load dashboard statistics:",
+          error
+        );
+
+      } finally {
+
+        setStatsLoading(false);
+
+      }
+
+    };
+
+
+    loadDashboardStats();
+
+  }, []);
+
+
+  /* =========================================================
      AUTOMATIC CAROUSEL
      Changes slide every 5 seconds
   ========================================================== */
@@ -224,6 +305,20 @@ function Dashboard() {
   const currentSlide = heroSlides[activeSlide];
 
 
+  /* =========================================================
+     COMPLIANCE PERCENTAGE
+  ========================================================== */
+
+  const compliancePercentage =
+    dashboardStats.total_inspections > 0
+      ? (
+          (dashboardStats.compliant /
+            dashboardStats.total_inspections) *
+          100
+        ).toFixed(1)
+      : "0.0";
+
+
   return (
 
     <main className="min-h-screen bg-[#f5f7f9] text-slate-800">
@@ -251,9 +346,7 @@ function Dashboard() {
               </span>
 
               <span className="ml-2 text-amber-700">
-                AI-generated findings assist the inspection process.
-                Final compliance decisions must be verified by an
-                authorized officer.
+                NiyamDrishti is currently in the testing phase. Some compliance results may contain inconsistencies due to ongoing refinement of the OCR and rule engine.
               </span>
 
             </div>
@@ -857,7 +950,9 @@ function Dashboard() {
                                text-[#123b63]
                                mt-2"
                   >
-                    128
+                    {statsLoading
+                      ? "—"
+                      : dashboardStats.total_inspections}
                   </p>
 
                 </div>
@@ -904,7 +999,9 @@ function Dashboard() {
                                text-green-600
                                mt-2"
                   >
-                    94
+                    {statsLoading
+                      ? "—"
+                      : dashboardStats.compliant}
                   </p>
 
                   <p
@@ -912,7 +1009,9 @@ function Dashboard() {
                                text-green-600
                                mt-1"
                   >
-                    73.4%
+                    {statsLoading
+                      ? "—"
+                      : `${compliancePercentage}%`}
                   </p>
 
                 </div>
@@ -959,7 +1058,9 @@ function Dashboard() {
                                text-amber-600
                                mt-2"
                   >
-                    21
+                    {statsLoading
+                      ? "—"
+                      : dashboardStats.needs_review}
                   </p>
 
                   <p
@@ -1014,7 +1115,9 @@ function Dashboard() {
                                text-red-600
                                mt-2"
                   >
-                    13
+                    {statsLoading
+                      ? "—"
+                      : dashboardStats.potential_violations}
                   </p>
 
                   <p
@@ -1596,52 +1699,19 @@ function Dashboard() {
 
               <div
                 className="flex
-                           items-center
-                           gap-3
-                           mb-4"
+                          justify-center
+                          items-center
+                          mb-4"
               >
-
-                <div
-                  className="w-12
-                             h-12
-                             rounded-full
-                             bg-white
-                             flex
-                             items-center
-                             justify-center
-                             shadow-md"
-                >
-
-                  <Scale
-                    size={25}
-                    className="text-[#06345b]"
-                  />
-
-                </div>
-
-
-                <div className="text-left">
-
-                  <p
-                    className="text-[10px]
-                               uppercase
-                               tracking-widest
-                               text-white/60
-                               font-semibold"
-                  >
-                    Digital Legal Metrology Portal
-                  </p>
-
-                  <p
-                    className="text-xl
-                               font-bold
-                               text-white"
-                  >
-                    NiyamDrishti
-                  </p>
-
-                </div>
-
+                <img
+                  src="/images/logowhite.png"
+                  alt="NiyamDrishti"
+                  className="w-[280px]
+                            sm:w-[340px]
+                            lg:w-[390px]
+                            h-auto
+                            object-contain"
+                />
               </div>
 
 
