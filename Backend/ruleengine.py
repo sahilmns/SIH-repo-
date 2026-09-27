@@ -79,12 +79,7 @@ class LegalMetrologyOCREngine:
     "detections": entries
 }
 
-if __name__ == "__main__":
-    image_path = r"D:\Programming\Python\glucond.jpeg"
 
-    test_case = LegalMetrologyOCREngine()
-
-    result = test_case.extract_to_json(image_path)
     # print(result)
 
 # for detection in result["detections"]:
@@ -6472,8 +6467,15 @@ class LegalMetrologyRuleEngine:
                 )
             }
         }
-test_engine = LegalMetrologyRuleEngine(result)
 
+
+if __name__ == "__main__":
+    image_path = r"D:\Programming\Python\glucond.jpeg"
+
+    test_case = LegalMetrologyOCREngine()
+    test_engine = LegalMetrologyRuleEngine(result)
+    result = test_case.extract_to_json(image_path)
+    print(result)
 # # print(ocr_json)
 # print(test_engine.check_mrp())
 # print(test_engine.check_unit_sale_price())
