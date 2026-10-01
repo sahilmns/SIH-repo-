@@ -22,7 +22,7 @@ from models import (
 # CONFIG
 # ============================================================
 
-UPLOAD_DIR = Path("uploads/inspections")
+UPLOAD_DIR = Path("/tmp/uploads/inspections")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
