@@ -45,37 +45,80 @@ function NiyamDrishtiLogo({ className = "" }) {
    STORAGE KEYS
 ========================================================= */
 
-const SETTINGS_STORAGE_KEY = "niyamdrishti_settings";
 const USER_STORAGE_KEY = "labellens_user";
+const SETTINGS_STORAGE_KEY = "niyamdrishti_settings";
 
 /* =========================================================
-   DEFAULT SETTINGS
+   DEFAULT PROFILE SETTINGS
 ========================================================= */
 
-const DEFAULT_SETTINGS = {
+const DEFAULT_PROFILE = {
   inspectorName: "Inspector",
   designation: "Enforcement Officer",
   email: "inspector@example.com",
 };
 
 /* =========================================================
-   GET SAVED SETTINGS
+   GET CURRENT USER ROLE
 ========================================================= */
 
-function getSavedSettings() {
+function getCurrentUserRole() {
+  try {
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+
+    if (!storedUser) {
+      return "Inspector";
+    }
+
+    const user = JSON.parse(storedUser);
+
+    const role = String(
+      user?.role || "inspector"
+    ).toLowerCase();
+
+    if (role === "consumer") {
+      return "Consumer";
+    }
+
+    if (role === "manufacturer") {
+      return "Manufacturer";
+    }
+
+    if (role === "inspector") {
+      return "Inspector";
+    }
+
+    return "Inspector";
+  } catch (error) {
+    console.error(
+      "Unable to read user role:",
+      error
+    );
+
+    return "Inspector";
+  }
+}
+
+/* =========================================================
+   GET SAVED PROFILE SETTINGS
+========================================================= */
+
+function getSavedProfileSettings() {
   try {
     const storedSettings = localStorage.getItem(
       SETTINGS_STORAGE_KEY
     );
 
     if (!storedSettings) {
-      return DEFAULT_SETTINGS;
+      return DEFAULT_PROFILE;
     }
 
-    const parsedSettings = JSON.parse(storedSettings);
+    const parsedSettings = JSON.parse(
+      storedSettings
+    );
 
     return {
-      ...DEFAULT_SETTINGS,
+      ...DEFAULT_PROFILE,
       ...parsedSettings,
     };
   } catch (error) {
@@ -84,84 +127,36 @@ function getSavedSettings() {
       error
     );
 
-    return DEFAULT_SETTINGS;
+    return DEFAULT_PROFILE;
   }
 }
 
 /* =========================================================
-   GET CURRENT USER
+   ROLE SUBTITLE
 ========================================================= */
 
-function getCurrentUser() {
-  try {
-    const storedUser =
-      localStorage.getItem(USER_STORAGE_KEY);
+function getRoleSubtitle(role, savedDesignation) {
+  /*
+   * For Inspector:
+   * Use the designation saved in Settings.
+   *
+   * For Consumer / Manufacturer:
+   * Keep the role-specific subtitle.
+   */
 
-    if (!storedUser) {
-      return {
-        name: "Inspector",
-        email: "inspector@example.com",
-        role: "inspector",
-      };
-    }
-
-    const user = JSON.parse(storedUser);
-
-    return {
-      name: user?.name || "Inspector",
-      email:
-        user?.email || "inspector@example.com",
-      role: String(
-        user?.role || "inspector"
-      ).toLowerCase(),
-    };
-  } catch (error) {
-    console.error(
-      "Unable to read current user:",
-      error
-    );
-
-    return {
-      name: "Inspector",
-      email: "inspector@example.com",
-      role: "inspector",
-    };
-  }
-}
-
-/* =========================================================
-   GET ROLE LABEL
-========================================================= */
-
-function getRoleLabel(role) {
-  switch (String(role).toLowerCase()) {
-    case "consumer":
-      return "Consumer";
-
-    case "manufacturer":
-      return "Manufacturer";
-
-    case "inspector":
-    default:
-      return "Inspector";
-  }
-}
-
-/* =========================================================
-   GET ROLE SUBTITLE
-========================================================= */
-
-function getRoleSubtitle(role, designation) {
-  switch (String(role).toLowerCase()) {
-    case "consumer":
+  switch (role) {
+    case "Consumer":
       return "Consumer User";
 
-    case "manufacturer":
+    case "Manufacturer":
       return "Manufacturer";
 
-    case "inspector":
+    case "Inspector":
     default:
-      return designation || "Enforcement Officer";
+      return (
+        savedDesignation ||
+        "Enforcement Officer"
+      );
   }
 }
 
@@ -173,25 +168,31 @@ function Navbar({ setSidebarOpen }) {
   const navigate = useNavigate();
 
   /* =======================================================
-     GENERAL STATES
+     STATES
   ======================================================= */
 
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] =
+    useState(false);
 
   /* =======================================================
-     USER STATE
+     USER ROLE
   ======================================================= */
 
-  const [user, setUser] = useState(() =>
-    getCurrentUser()
-  );
-
-  const [settings, setSettings] = useState(() =>
-    getSavedSettings()
-  );
+  const [userRole, setUserRole] = useState(() => {
+    return getCurrentUserRole();
+  });
 
   /* =======================================================
-     ACCESSIBILITY
+     PROFILE SETTINGS
+  ======================================================= */
+
+  const [profileSettings, setProfileSettings] =
+    useState(() => {
+      return getSavedProfileSettings();
+    });
+
+  /* =======================================================
+     FONT SCALE
   ======================================================= */
 
   const [fontScale, setFontScale] = useState(() => {
@@ -204,8 +205,14 @@ function Navbar({ setSidebarOpen }) {
       : 100;
   });
 
-  const [accessibilityOpen, setAccessibilityOpen] =
-    useState(false);
+  /* =======================================================
+     ACCESSIBILITY
+  ======================================================= */
+
+  const [
+    accessibilityOpen,
+    setAccessibilityOpen,
+  ] = useState(false);
 
   const [highContrast, setHighContrast] =
     useState(() => {
@@ -239,70 +246,62 @@ function Navbar({ setSidebarOpen }) {
      NOTIFICATIONS
   ======================================================= */
 
-  const [notificationsOpen, setNotificationsOpen] =
-    useState(false);
+  const [
+    notificationsOpen,
+    setNotificationsOpen,
+  ] = useState(false);
 
   /* =======================================================
-     LOAD USER + SETTINGS
+     UPDATE USER ROLE + PROFILE
   ======================================================= */
 
-  const refreshUserAndSettings = () => {
-    setUser(getCurrentUser());
-    setSettings(getSavedSettings());
-  };
-
   useEffect(() => {
-    refreshUserAndSettings();
+    const updateUserInformation = () => {
+      setUserRole(
+        getCurrentUserRole()
+      );
 
-    /* -----------------------------------------------------
-       Settings page sends this event after Save Changes
-    ----------------------------------------------------- */
-
-    const handleSettingsUpdate = () => {
-      refreshUserAndSettings();
+      setProfileSettings(
+        getSavedProfileSettings()
+      );
     };
 
-    /* -----------------------------------------------------
-       Existing authentication event
-    ----------------------------------------------------- */
+    /* Initial load */
+    updateUserInformation();
 
-    const handleUserUpdate = () => {
-      refreshUserAndSettings();
-    };
-
-    window.addEventListener(
-      "niyamdrishti-settings-updated",
-      handleSettingsUpdate
-    );
-
+    /* Existing NiyamDrishti user event */
     window.addEventListener(
       "labellens-user-updated",
-      handleUserUpdate
+      updateUserInformation
     );
 
-    /* -----------------------------------------------------
-       Cross-tab localStorage updates
-    ----------------------------------------------------- */
-
+    /* Storage event */
     window.addEventListener(
       "storage",
-      refreshUserAndSettings
+      updateUserInformation
+    );
+
+    /* NEW:
+       Listen for Settings.jsx save event */
+    window.addEventListener(
+      "niyamdrishti-settings-updated",
+      updateUserInformation
     );
 
     return () => {
       window.removeEventListener(
-        "niyamdrishti-settings-updated",
-        handleSettingsUpdate
-      );
-
-      window.removeEventListener(
         "labellens-user-updated",
-        handleUserUpdate
+        updateUserInformation
       );
 
       window.removeEventListener(
         "storage",
-        refreshUserAndSettings
+        updateUserInformation
+      );
+
+      window.removeEventListener(
+        "niyamdrishti-settings-updated",
+        updateUserInformation
       );
     };
   }, []);
@@ -313,7 +312,9 @@ function Navbar({ setSidebarOpen }) {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
+      setIsScrolled(
+        window.scrollY > 100
+      );
     };
 
     window.addEventListener(
@@ -384,7 +385,10 @@ function Navbar({ setSidebarOpen }) {
 
   const decreaseFont = () => {
     setFontScale((current) =>
-      Math.max(80, current - 10)
+      Math.max(
+        80,
+        current - 10
+      )
     );
   };
 
@@ -394,7 +398,10 @@ function Navbar({ setSidebarOpen }) {
 
   const increaseFont = () => {
     setFontScale((current) =>
-      Math.min(140, current + 10)
+      Math.min(
+        140,
+        current + 10
+      )
     );
   };
 
@@ -435,33 +442,25 @@ function Navbar({ setSidebarOpen }) {
   const selectLanguage = (
     selectedLanguage
   ) => {
-    setLanguage(selectedLanguage);
+    setLanguage(
+      selectedLanguage
+    );
+
     setLanguageOpen(false);
   };
 
   /* =======================================================
-     DISPLAY DATA
+     DISPLAY VALUES
   ======================================================= */
 
-  const currentRole =
-    getRoleLabel(user.role);
-
   const displayName =
-    user.role === "inspector"
-      ? settings.inspectorName ||
-        user.name ||
-        "Inspector"
-      : user.name || currentRole;
-
-  const displayEmail =
-    settings.email ||
-    user.email ||
-    "inspector@example.com";
+    profileSettings.inspectorName ||
+    "Inspector";
 
   const roleSubtitle =
     getRoleSubtitle(
-      user.role,
-      settings.designation
+      userRole,
+      profileSettings.designation
     );
 
   /* =======================================================
@@ -513,7 +512,7 @@ function Navbar({ setSidebarOpen }) {
           <div className="h-[70px] flex items-center gap-4">
 
             {/* =================================================
-                HAMBURGER
+                HAMBURGER MENU
             ================================================== */}
 
             <button
@@ -549,7 +548,7 @@ function Navbar({ setSidebarOpen }) {
             </button>
 
             {/* =================================================
-                NIYAMDRISHTI LOGO
+                NIYAMDRISHTI BRAND LOGO
             ================================================== */}
 
             <button
@@ -598,7 +597,9 @@ function Navbar({ setSidebarOpen }) {
 
             <div className="flex items-center gap-1.5 ml-auto">
 
-              {/* HELP */}
+              {/* =================================================
+                  HELP
+              ================================================== */}
 
               <button
                 type="button"
@@ -647,6 +648,7 @@ function Navbar({ setSidebarOpen }) {
                     transition
                   "
                 >
+
                   <Bell size={20} />
 
                   <span
@@ -662,6 +664,7 @@ function Navbar({ setSidebarOpen }) {
                       ring-white
                     "
                   />
+
                 </button>
 
                 {notificationsOpen && (
@@ -747,19 +750,40 @@ function Navbar({ setSidebarOpen }) {
                     justify-center
                   "
                 >
+
                   <UserCircle
                     size={22}
                     className="text-[#073b67]"
                   />
+
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 max-w-[180px]">
 
-                  <p className="text-sm font-bold text-slate-800 truncate max-w-[170px]">
+                  {/* SAVED INSPECTOR NAME */}
+
+                  <p
+                    className="
+                      text-sm
+                      font-bold
+                      text-slate-800
+                      truncate
+                    "
+                    title={displayName}
+                  >
                     {displayName}
                   </p>
 
-                  <p className="text-[10px] text-slate-500 truncate max-w-[170px]">
+                  {/* SAVED DESIGNATION */}
+
+                  <p
+                    className="
+                      text-[10px]
+                      text-slate-500
+                      truncate
+                    "
+                    title={roleSubtitle}
+                  >
                     {roleSubtitle}
                   </p>
 
@@ -1122,9 +1146,7 @@ function Navbar({ setSidebarOpen }) {
 
                       {language ===
                         "English" && (
-                        <Check
-                          size={15}
-                        />
+                        <Check size={15} />
                       )}
 
                     </button>
@@ -1153,9 +1175,7 @@ function Navbar({ setSidebarOpen }) {
 
                       {language ===
                         "हिन्दी" && (
-                        <Check
-                          size={15}
-                        />
+                        <Check size={15} />
                       )}
 
                     </button>
@@ -1221,7 +1241,9 @@ function Navbar({ setSidebarOpen }) {
             <button
               type="button"
               onClick={() =>
-                setAccessibilityOpen(false)
+                setAccessibilityOpen(
+                  false
+                )
               }
               className="
                 p-1.5
@@ -1433,7 +1455,9 @@ function Navbar({ setSidebarOpen }) {
 
             <button
               type="button"
-              onClick={resetAccessibility}
+              onClick={
+                resetAccessibility
+              }
               className="
                 w-full
                 h-10
@@ -1539,7 +1563,9 @@ function Navbar({ setSidebarOpen }) {
             <button
               type="button"
               onClick={() =>
-                navigate("/new-inspection")
+                navigate(
+                  "/new-inspection"
+                )
               }
               className="
                 flex
@@ -1555,7 +1581,9 @@ function Navbar({ setSidebarOpen }) {
                 transition
               "
             >
-              <ClipboardCheck size={18} />
+              <ClipboardCheck
+                size={18}
+              />
               Compliance
             </button>
 
@@ -1655,7 +1683,7 @@ function Navbar({ setSidebarOpen }) {
       </nav>
 
       {/* =====================================================
-          HERO
+          HERO / MAIN CONTENT
       ====================================================== */}
 
       <section
@@ -1671,7 +1699,7 @@ function Navbar({ setSidebarOpen }) {
         "
       >
 
-        {/* BACKGROUND */}
+        {/* BACKGROUND IMAGE */}
 
         <div className="absolute inset-0">
 
@@ -1690,7 +1718,7 @@ function Navbar({ setSidebarOpen }) {
 
         </div>
 
-        {/* OVERLAY */}
+        {/* DARK OVERLAY */}
 
         <div
           className="
@@ -1927,6 +1955,8 @@ function Navbar({ setSidebarOpen }) {
               "
             >
 
+              {/* EVIDENCE */}
+
               <div
                 className="
                   flex
@@ -1955,6 +1985,8 @@ function Navbar({ setSidebarOpen }) {
 
               </div>
 
+              {/* DIGITAL RECORDS */}
+
               <div
                 className="
                   flex
@@ -1982,6 +2014,8 @@ function Navbar({ setSidebarOpen }) {
                 Digital records
 
               </div>
+
+              {/* LEGAL METROLOGY */}
 
               <div
                 className="
