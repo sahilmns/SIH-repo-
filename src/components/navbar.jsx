@@ -42,55 +42,78 @@ function NiyamDrishtiLogo({ className = "" }) {
 }
 
 /* =========================================================
-   GET CURRENT USER ROLE
+   GET CURRENT USER PROFILE
 ========================================================= */
 
-function getCurrentUserRole() {
+function getCurrentUserProfile() {
   try {
     const storedUser = localStorage.getItem("labellens_user");
+    const storedSettings = localStorage.getItem(
+      "niyamdrishti_settings"
+    );
 
-    if (!storedUser) {
-      return "Inspector";
+    let user = {};
+    let settings = {};
+
+    if (storedUser) {
+      user = JSON.parse(storedUser);
     }
 
-    const user = JSON.parse(storedUser);
+    if (storedSettings) {
+      settings = JSON.parse(storedSettings);
+    }
 
-    const role = String(user?.role || "inspector").toLowerCase();
+    const role = String(
+      user?.role || "inspector"
+    ).toLowerCase();
+
+    let formattedRole = "Inspector";
+    let defaultDesignation = "Enforcement Officer";
 
     if (role === "consumer") {
-      return "Consumer";
+      formattedRole = "Consumer";
+      defaultDesignation = "Consumer User";
     }
 
     if (role === "manufacturer") {
-      return "Manufacturer";
+      formattedRole = "Manufacturer";
+      defaultDesignation = "Manufacturer";
     }
 
     if (role === "inspector") {
-      return "Inspector";
+      formattedRole = "Inspector";
+      defaultDesignation = "Enforcement Officer";
     }
 
-    return "Inspector";
+    return {
+      name:
+        settings?.inspectorName ||
+        user?.name ||
+        formattedRole,
+
+      designation:
+        settings?.designation ||
+        defaultDesignation,
+
+      role: formattedRole,
+
+      email:
+        settings?.email ||
+        user?.email ||
+        "",
+    };
   } catch (error) {
-    console.error("Unable to read user role:", error);
-    return "Inspector";
-  }
-}
+    console.error(
+      "Unable to read current user profile:",
+      error
+    );
 
-/* =========================================================
-   ROLE SUBTITLE
-========================================================= */
-
-function getRoleSubtitle(role) {
-  switch (role) {
-    case "Consumer":
-      return "Consumer User";
-
-    case "Manufacturer":
-      return "Manufacturer";
-
-    case "Inspector":
-    default:
-      return "Enforcement Officer";
+    return {
+      name: "Inspector",
+      designation: "Enforcement Officer",
+      role: "Inspector",
+      email: "",
+    };
   }
 }
 
@@ -107,8 +130,8 @@ function Navbar({ setSidebarOpen }) {
 
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const [userRole, setUserRole] = useState(() => {
-    return getCurrentUserRole();
+  const [userProfile, setUserProfile] = useState(() => {
+    return getCurrentUserProfile();
   });
 
   const [fontScale, setFontScale] = useState(() => {
@@ -145,35 +168,49 @@ function Navbar({ setSidebarOpen }) {
     useState(false);
 
   /* =======================================================
-     UPDATE ROLE
+     UPDATE USER PROFILE
   ======================================================= */
 
   useEffect(() => {
-    const updateUserRole = () => {
-      setUserRole(getCurrentUserRole());
+    const updateUserProfile = () => {
+      setUserProfile(getCurrentUserProfile());
     };
 
-    updateUserRole();
+    // Load profile immediately
+    updateUserProfile();
 
+    // Existing login/user update event
     window.addEventListener(
       "labellens-user-updated",
-      updateUserRole
+      updateUserProfile
     );
 
+    // Settings update event
+    window.addEventListener(
+      "niyamdrishti-settings-updated",
+      updateUserProfile
+    );
+
+    // Browser storage changes
     window.addEventListener(
       "storage",
-      updateUserRole
+      updateUserProfile
     );
 
     return () => {
       window.removeEventListener(
         "labellens-user-updated",
-        updateUserRole
+        updateUserProfile
+      );
+
+      window.removeEventListener(
+        "niyamdrishti-settings-updated",
+        updateUserProfile
       );
 
       window.removeEventListener(
         "storage",
-        updateUserRole
+        updateUserProfile
       );
     };
   }, []);
@@ -304,8 +341,6 @@ function Navbar({ setSidebarOpen }) {
     setLanguageOpen(false);
   };
 
-  const roleSubtitle = getRoleSubtitle(userRole);
-
   /* =======================================================
      RETURN
   ======================================================= */
@@ -356,7 +391,6 @@ function Navbar({ setSidebarOpen }) {
 
             {/* =================================================
                 HAMBURGER MENU
-                LEFT SIDE
             ================================================== */}
 
             <button
@@ -598,11 +632,11 @@ function Navbar({ setSidebarOpen }) {
                 <div>
 
                   <p className="text-sm font-bold text-slate-800">
-                    {userRole}
+                    {userProfile.name}
                   </p>
 
                   <p className="text-[10px] text-slate-500">
-                    {roleSubtitle}
+                    {userProfile.designation}
                   </p>
 
                 </div>
@@ -1905,4 +1939,3 @@ function Navbar({ setSidebarOpen }) {
 }
 
 export default Navbar;
-
