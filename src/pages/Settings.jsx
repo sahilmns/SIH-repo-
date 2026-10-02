@@ -9,38 +9,85 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const DEFAULT_SETTINGS = {
+  inspectorName: "Inspector",
+  designation: "Enforcement Officer",
+  email: "inspector@example.com",
+  notifications: true,
+  inspectionAlerts: true,
+  reportNotifications: true,
+  autoSave: true,
+};
+
+const SETTINGS_STORAGE_KEY = "niyamdrishti_settings";
 
 function Settings() {
   const navigate = useNavigate();
 
-  const [settings, setSettings] = useState({
-    inspectorName: "Inspector",
-    designation: "Enforcement Officer",
-    email: "inspector@example.com",
-    notifications: true,
-    inspectionAlerts: true,
-    reportNotifications: true,
-    autoSave: true,
-  });
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [saved, setSaved] = useState(false);
+
+  // Load saved settings when the page opens
+  useEffect(() => {
+    try {
+      const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+
+        setSettings({
+          ...DEFAULT_SETTINGS,
+          ...parsedSettings,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+    }
+  }, []);
 
   const handleChange = (field, value) => {
     setSettings((prev) => ({
       ...prev,
       [field]: value,
     }));
+
+    setSaved(false);
   };
 
   const handleSave = () => {
-    // Frontend placeholder.
-    // Later this can call the backend settings API.
-    alert("Settings saved successfully.");
+    try {
+      localStorage.setItem(
+        SETTINGS_STORAGE_KEY,
+        JSON.stringify(settings)
+      );
+
+      // Notify other components that settings changed
+      window.dispatchEvent(
+        new CustomEvent("niyamdrishti-settings-updated", {
+          detail: settings,
+        })
+      );
+
+      setSaved(true);
+
+      setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      alert("Unable to save settings. Please try again.");
+    }
   };
 
   return (
     <main className="p-6 lg:p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
 
-      {/* Header */}
+      {/* =========================================================
+          HEADER
+      ========================================================= */}
+
       <div className="flex items-center justify-between mb-8">
 
         <div>
@@ -55,11 +102,18 @@ function Settings() {
 
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 px-4 py-2.5
-                     bg-white border border-slate-200
-                     rounded-xl text-sm font-medium text-slate-600
-                     hover:bg-slate-50 hover:text-slate-900
-                     transition-all duration-200"
+          className="
+            flex items-center gap-2
+            px-4 py-2.5
+            bg-white
+            border border-slate-200
+            rounded-xl
+            text-sm font-medium
+            text-slate-600
+            hover:bg-slate-50
+            hover:text-slate-900
+            transition-all duration-200
+          "
         >
           <ArrowLeft size={18} />
           Dashboard
@@ -67,19 +121,40 @@ function Settings() {
 
       </div>
 
+
+      {/* =========================================================
+          SETTINGS GRID
+      ========================================================= */}
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* Profile */}
-        <section className="xl:col-span-2 bg-white rounded-2xl
-                            border border-slate-200 shadow-sm">
+        {/* =======================================================
+            PROFILE
+        ======================================================== */}
+
+        <section
+          className="
+            xl:col-span-2
+            bg-white
+            rounded-2xl
+            border border-slate-200
+            shadow-sm
+          "
+        >
 
           <div className="p-6 border-b border-slate-200">
 
             <div className="flex items-center gap-3">
 
-              <div className="w-10 h-10 rounded-xl bg-blue-50
-                              flex items-center justify-center
-                              text-blue-600">
+              <div
+                className="
+                  w-10 h-10
+                  rounded-xl
+                  bg-blue-50
+                  flex items-center justify-center
+                  text-blue-600
+                "
+              >
                 <User size={21} />
               </div>
 
@@ -97,10 +172,13 @@ function Settings() {
 
           </div>
 
+
           <div className="p-6 space-y-5">
 
             {/* Name */}
+
             <div>
+
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Inspector Name
               </label>
@@ -109,19 +187,33 @@ function Settings() {
                 type="text"
                 value={settings.inspectorName}
                 onChange={(e) =>
-                  handleChange("inspectorName", e.target.value)
+                  handleChange(
+                    "inspectorName",
+                    e.target.value
+                  )
                 }
-                className="w-full px-4 py-3 rounded-xl
-                           border border-slate-200
-                           focus:outline-none focus:ring-2
-                           focus:ring-blue-500/20
-                           focus:border-blue-500
-                           text-sm text-slate-900"
+                className="
+                  w-full
+                  px-4 py-3
+                  rounded-xl
+                  border border-slate-200
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500/20
+                  focus:border-blue-500
+                  text-sm
+                  text-slate-900
+                "
+                placeholder="Enter inspector name"
               />
+
             </div>
 
+
             {/* Designation */}
+
             <div>
+
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Designation
               </label>
@@ -130,19 +222,33 @@ function Settings() {
                 type="text"
                 value={settings.designation}
                 onChange={(e) =>
-                  handleChange("designation", e.target.value)
+                  handleChange(
+                    "designation",
+                    e.target.value
+                  )
                 }
-                className="w-full px-4 py-3 rounded-xl
-                           border border-slate-200
-                           focus:outline-none focus:ring-2
-                           focus:ring-blue-500/20
-                           focus:border-blue-500
-                           text-sm text-slate-900"
+                className="
+                  w-full
+                  px-4 py-3
+                  rounded-xl
+                  border border-slate-200
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500/20
+                  focus:border-blue-500
+                  text-sm
+                  text-slate-900
+                "
+                placeholder="Enter designation"
               />
+
             </div>
 
+
             {/* Email */}
+
             <div>
+
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Email
               </label>
@@ -151,32 +257,60 @@ function Settings() {
                 type="email"
                 value={settings.email}
                 onChange={(e) =>
-                  handleChange("email", e.target.value)
+                  handleChange(
+                    "email",
+                    e.target.value
+                  )
                 }
-                className="w-full px-4 py-3 rounded-xl
-                           border border-slate-200
-                           focus:outline-none focus:ring-2
-                           focus:ring-blue-500/20
-                           focus:border-blue-500
-                           text-sm text-slate-900"
+                className="
+                  w-full
+                  px-4 py-3
+                  rounded-xl
+                  border border-slate-200
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500/20
+                  focus:border-blue-500
+                  text-sm
+                  text-slate-900
+                "
+                placeholder="Enter email address"
               />
+
             </div>
 
           </div>
+
         </section>
 
 
-        {/* System Information */}
-        <section className="bg-white rounded-2xl
-                            border border-slate-200 shadow-sm h-fit">
+        {/* =======================================================
+            SYSTEM INFORMATION
+        ======================================================== */}
+
+        <section
+          className="
+            bg-white
+            rounded-2xl
+            border border-slate-200
+            shadow-sm
+            h-fit
+          "
+        >
 
           <div className="p-6 border-b border-slate-200">
 
             <div className="flex items-center gap-3">
 
-              <div className="w-10 h-10 rounded-xl bg-emerald-50
-                              flex items-center justify-center
-                              text-emerald-600">
+              <div
+                className="
+                  w-10 h-10
+                  rounded-xl
+                  bg-emerald-50
+                  flex items-center justify-center
+                  text-emerald-600
+                "
+              >
                 <Database size={21} />
               </div>
 
@@ -194,19 +328,28 @@ function Settings() {
 
           </div>
 
+
           <div className="p-6 space-y-5">
 
+            {/* Platform */}
+
             <div>
+
               <p className="text-xs text-slate-500">
                 Platform
               </p>
 
               <p className="text-sm font-semibold text-slate-900 mt-1">
-                LabelLens
+                NiyamDrishti
               </p>
+
             </div>
 
+
+            {/* Compliance Rules */}
+
             <div>
+
               <p className="text-xs text-slate-500">
                 Compliance Rules
               </p>
@@ -214,9 +357,14 @@ function Settings() {
               <p className="text-sm font-semibold text-slate-900 mt-1">
                 Legal Metrology Rules
               </p>
+
             </div>
 
+
+            {/* Rule Engine */}
+
             <div>
+
               <p className="text-xs text-slate-500">
                 Rule Engine
               </p>
@@ -224,9 +372,14 @@ function Settings() {
               <p className="text-sm font-semibold text-green-600 mt-1">
                 Ready
               </p>
+
             </div>
 
+
+            {/* System Version */}
+
             <div>
+
               <p className="text-xs text-slate-500">
                 System Version
               </p>
@@ -234,6 +387,7 @@ function Settings() {
               <p className="text-sm font-semibold text-slate-900 mt-1">
                 Prototype v1.0
               </p>
+
             </div>
 
           </div>
@@ -241,17 +395,33 @@ function Settings() {
         </section>
 
 
-        {/* Notifications */}
-        <section className="xl:col-span-2 bg-white rounded-2xl
-                            border border-slate-200 shadow-sm">
+        {/* =======================================================
+            NOTIFICATIONS
+        ======================================================== */}
+
+        <section
+          className="
+            xl:col-span-2
+            bg-white
+            rounded-2xl
+            border border-slate-200
+            shadow-sm
+          "
+        >
 
           <div className="p-6 border-b border-slate-200">
 
             <div className="flex items-center gap-3">
 
-              <div className="w-10 h-10 rounded-xl bg-amber-50
-                              flex items-center justify-center
-                              text-amber-600">
+              <div
+                className="
+                  w-10 h-10
+                  rounded-xl
+                  bg-amber-50
+                  flex items-center justify-center
+                  text-amber-600
+                "
+              >
                 <Bell size={21} />
               </div>
 
@@ -269,13 +439,21 @@ function Settings() {
 
           </div>
 
+
           <div className="p-6 space-y-1">
 
-            {/* Notification Toggle */}
-            <div className="flex items-center justify-between
-                            py-4 border-b border-slate-100">
+            {/* Notifications */}
+
+            <div
+              className="
+                flex items-center justify-between
+                py-4
+                border-b border-slate-100
+              "
+            >
 
               <div>
+
                 <p className="text-sm font-semibold text-slate-900">
                   Notifications
                 </p>
@@ -283,28 +461,43 @@ function Settings() {
                 <p className="text-xs text-slate-500 mt-1">
                   Enable system notifications
                 </p>
+
               </div>
 
               <button
+                type="button"
                 onClick={() =>
                   handleChange(
                     "notifications",
                     !settings.notifications
                   )
                 }
-                className={`w-11 h-6 rounded-full transition-all
-                  ${settings.notifications
-                    ? "bg-blue-600"
-                    : "bg-slate-300"
-                  }`}
+                aria-label="Toggle notifications"
+                className={`
+                  w-11 h-6
+                  rounded-full
+                  transition-all
+                  ${
+                    settings.notifications
+                      ? "bg-blue-600"
+                      : "bg-slate-300"
+                  }
+                `}
               >
                 <span
-                  className={`block w-5 h-5 bg-white rounded-full
-                    shadow-sm transition-transform
-                    ${settings.notifications
-                      ? "translate-x-5"
-                      : "translate-x-0.5"
-                    }`}
+                  className={`
+                    block
+                    w-5 h-5
+                    bg-white
+                    rounded-full
+                    shadow-sm
+                    transition-transform
+                    ${
+                      settings.notifications
+                        ? "translate-x-5"
+                        : "translate-x-0.5"
+                    }
+                  `}
                 />
               </button>
 
@@ -312,10 +505,17 @@ function Settings() {
 
 
             {/* Inspection Alerts */}
-            <div className="flex items-center justify-between
-                            py-4 border-b border-slate-100">
+
+            <div
+              className="
+                flex items-center justify-between
+                py-4
+                border-b border-slate-100
+              "
+            >
 
               <div>
+
                 <p className="text-sm font-semibold text-slate-900">
                   Inspection Alerts
                 </p>
@@ -323,39 +523,60 @@ function Settings() {
                 <p className="text-xs text-slate-500 mt-1">
                   Get alerts for inspections requiring attention
                 </p>
+
               </div>
 
               <button
+                type="button"
                 onClick={() =>
                   handleChange(
                     "inspectionAlerts",
                     !settings.inspectionAlerts
                   )
                 }
-                className={`w-11 h-6 rounded-full transition-all
-                  ${settings.inspectionAlerts
-                    ? "bg-blue-600"
-                    : "bg-slate-300"
-                  }`}
+                aria-label="Toggle inspection alerts"
+                className={`
+                  w-11 h-6
+                  rounded-full
+                  transition-all
+                  ${
+                    settings.inspectionAlerts
+                      ? "bg-blue-600"
+                      : "bg-slate-300"
+                  }
+                `}
               >
                 <span
-                  className={`block w-5 h-5 bg-white rounded-full
-                    shadow-sm transition-transform
-                    ${settings.inspectionAlerts
-                      ? "translate-x-5"
-                      : "translate-x-0.5"
-                    }`}
+                  className={`
+                    block
+                    w-5 h-5
+                    bg-white
+                    rounded-full
+                    shadow-sm
+                    transition-transform
+                    ${
+                      settings.inspectionAlerts
+                        ? "translate-x-5"
+                        : "translate-x-0.5"
+                    }
+                  `}
                 />
               </button>
 
             </div>
 
 
-            {/* Reports */}
-            <div className="flex items-center justify-between
-                            py-4">
+            {/* Report Notifications */}
+
+            <div
+              className="
+                flex items-center justify-between
+                py-4
+              "
+            >
 
               <div>
+
                 <p className="text-sm font-semibold text-slate-900">
                   Report Notifications
                 </p>
@@ -363,28 +584,43 @@ function Settings() {
                 <p className="text-xs text-slate-500 mt-1">
                   Receive notifications when reports are generated
                 </p>
+
               </div>
 
               <button
+                type="button"
                 onClick={() =>
                   handleChange(
                     "reportNotifications",
                     !settings.reportNotifications
                   )
                 }
-                className={`w-11 h-6 rounded-full transition-all
-                  ${settings.reportNotifications
-                    ? "bg-blue-600"
-                    : "bg-slate-300"
-                  }`}
+                aria-label="Toggle report notifications"
+                className={`
+                  w-11 h-6
+                  rounded-full
+                  transition-all
+                  ${
+                    settings.reportNotifications
+                      ? "bg-blue-600"
+                      : "bg-slate-300"
+                  }
+                `}
               >
                 <span
-                  className={`block w-5 h-5 bg-white rounded-full
-                    shadow-sm transition-transform
-                    ${settings.reportNotifications
-                      ? "translate-x-5"
-                      : "translate-x-0.5"
-                    }`}
+                  className={`
+                    block
+                    w-5 h-5
+                    bg-white
+                    rounded-full
+                    shadow-sm
+                    transition-transform
+                    ${
+                      settings.reportNotifications
+                        ? "translate-x-5"
+                        : "translate-x-0.5"
+                    }
+                  `}
                 />
               </button>
 
@@ -395,21 +631,38 @@ function Settings() {
         </section>
 
 
-        {/* Security */}
-        <section className="bg-white rounded-2xl
-                            border border-slate-200 shadow-sm h-fit">
+        {/* =======================================================
+            SECURITY
+        ======================================================== */}
+
+        <section
+          className="
+            bg-white
+            rounded-2xl
+            border border-slate-200
+            shadow-sm
+            h-fit
+          "
+        >
 
           <div className="p-6 border-b border-slate-200">
 
             <div className="flex items-center gap-3">
 
-              <div className="w-10 h-10 rounded-xl bg-purple-50
-                              flex items-center justify-center
-                              text-purple-600">
+              <div
+                className="
+                  w-10 h-10
+                  rounded-xl
+                  bg-purple-50
+                  flex items-center justify-center
+                  text-purple-600
+                "
+              >
                 <ShieldCheck size={21} />
               </div>
 
               <div>
+
                 <h2 className="text-lg font-semibold text-slate-900">
                   Security
                 </h2>
@@ -417,11 +670,13 @@ function Settings() {
                 <p className="text-sm text-slate-500">
                   Inspection data protection
                 </p>
+
               </div>
 
             </div>
 
           </div>
+
 
           <div className="p-6">
 
@@ -429,7 +684,7 @@ function Settings() {
 
               <Info
                 size={18}
-                className="text-blue-500 mt-0.5"
+                className="text-blue-500 mt-0.5 flex-shrink-0"
               />
 
               <p className="text-sm text-slate-500 leading-6">
@@ -447,20 +702,44 @@ function Settings() {
       </div>
 
 
-      {/* Save Button */}
+      {/* =========================================================
+          SAVE BUTTON
+      ========================================================= */}
+
       <div className="flex justify-end mt-6">
 
         <button
+          type="button"
           onClick={handleSave}
-          className="flex items-center gap-2
-                     bg-blue-600 hover:bg-blue-700
-                     text-white font-semibold
-                     px-6 py-3 rounded-xl
-                     shadow-sm hover:shadow-md
-                     transition-all duration-200"
+          className={`
+            flex items-center gap-2
+            text-white
+            font-semibold
+            px-6 py-3
+            rounded-xl
+            shadow-sm
+            hover:shadow-md
+            transition-all duration-200
+            ${
+              saved
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : "bg-blue-600 hover:bg-blue-700"
+            }
+          `}
         >
-          <Save size={18} />
-          Save Changes
+
+          {saved ? (
+            <>
+              <ShieldCheck size={18} />
+              Saved
+            </>
+          ) : (
+            <>
+              <Save size={18} />
+              Save Changes
+            </>
+          )}
+
         </button>
 
       </div>
