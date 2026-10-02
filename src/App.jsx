@@ -13,7 +13,7 @@ import GovernmentPageHeader from "./components/GovernmentPageHeader";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import CreateAccount from "./pages/CreateAccount";
 import ForgotPassword from "./pages/ForgotPassword";
 
 /* =========================================================
@@ -295,23 +295,23 @@ function App() {
             ================================================== */}
 
             {/* ================= LOGIN ================= */}
-
+            
             <Route
               path="/login"
               element={<Login />}
             />
-
-
+            
+            
             {/* ================= CREATE ACCOUNT ================= */}
-
+            
             <Route
               path="/signup"
-              element={<Signup />}
+              element={<CreateAccount />}
             />
-
-
+            
+            
             {/* ================= FORGOT PASSWORD ================= */}
-
+            
             <Route
               path="/forgot-password"
               element={<ForgotPassword />}
