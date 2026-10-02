@@ -42,78 +42,126 @@ function NiyamDrishtiLogo({ className = "" }) {
 }
 
 /* =========================================================
-   GET CURRENT USER PROFILE
+   STORAGE KEYS
 ========================================================= */
 
-function getCurrentUserProfile() {
+const SETTINGS_STORAGE_KEY = "niyamdrishti_settings";
+const USER_STORAGE_KEY = "labellens_user";
+
+/* =========================================================
+   DEFAULT SETTINGS
+========================================================= */
+
+const DEFAULT_SETTINGS = {
+  inspectorName: "Inspector",
+  designation: "Enforcement Officer",
+  email: "inspector@example.com",
+};
+
+/* =========================================================
+   GET SAVED SETTINGS
+========================================================= */
+
+function getSavedSettings() {
   try {
-    const storedUser = localStorage.getItem("labellens_user");
     const storedSettings = localStorage.getItem(
-      "niyamdrishti_settings"
+      SETTINGS_STORAGE_KEY
     );
 
-    let user = {};
-    let settings = {};
-
-    if (storedUser) {
-      user = JSON.parse(storedUser);
+    if (!storedSettings) {
+      return DEFAULT_SETTINGS;
     }
 
-    if (storedSettings) {
-      settings = JSON.parse(storedSettings);
-    }
-
-    const role = String(
-      user?.role || "inspector"
-    ).toLowerCase();
-
-    let formattedRole = "Inspector";
-    let defaultDesignation = "Enforcement Officer";
-
-    if (role === "consumer") {
-      formattedRole = "Consumer";
-      defaultDesignation = "Consumer User";
-    }
-
-    if (role === "manufacturer") {
-      formattedRole = "Manufacturer";
-      defaultDesignation = "Manufacturer";
-    }
-
-    if (role === "inspector") {
-      formattedRole = "Inspector";
-      defaultDesignation = "Enforcement Officer";
-    }
+    const parsedSettings = JSON.parse(storedSettings);
 
     return {
-      name:
-        settings?.inspectorName ||
-        user?.name ||
-        formattedRole,
-
-      designation:
-        settings?.designation ||
-        defaultDesignation,
-
-      role: formattedRole,
-
-      email:
-        settings?.email ||
-        user?.email ||
-        "",
+      ...DEFAULT_SETTINGS,
+      ...parsedSettings,
     };
   } catch (error) {
     console.error(
-      "Unable to read current user profile:",
+      "Unable to read NiyamDrishti settings:",
+      error
+    );
+
+    return DEFAULT_SETTINGS;
+  }
+}
+
+/* =========================================================
+   GET CURRENT USER
+========================================================= */
+
+function getCurrentUser() {
+  try {
+    const storedUser =
+      localStorage.getItem(USER_STORAGE_KEY);
+
+    if (!storedUser) {
+      return {
+        name: "Inspector",
+        email: "inspector@example.com",
+        role: "inspector",
+      };
+    }
+
+    const user = JSON.parse(storedUser);
+
+    return {
+      name: user?.name || "Inspector",
+      email:
+        user?.email || "inspector@example.com",
+      role: String(
+        user?.role || "inspector"
+      ).toLowerCase(),
+    };
+  } catch (error) {
+    console.error(
+      "Unable to read current user:",
       error
     );
 
     return {
       name: "Inspector",
-      designation: "Enforcement Officer",
-      role: "Inspector",
-      email: "",
+      email: "inspector@example.com",
+      role: "inspector",
     };
+  }
+}
+
+/* =========================================================
+   GET ROLE LABEL
+========================================================= */
+
+function getRoleLabel(role) {
+  switch (String(role).toLowerCase()) {
+    case "consumer":
+      return "Consumer";
+
+    case "manufacturer":
+      return "Manufacturer";
+
+    case "inspector":
+    default:
+      return "Inspector";
+  }
+}
+
+/* =========================================================
+   GET ROLE SUBTITLE
+========================================================= */
+
+function getRoleSubtitle(role, designation) {
+  switch (String(role).toLowerCase()) {
+    case "consumer":
+      return "Consumer User";
+
+    case "manufacturer":
+      return "Manufacturer";
+
+    case "inspector":
+    default:
+      return designation || "Enforcement Officer";
   }
 }
 
@@ -125,92 +173,136 @@ function Navbar({ setSidebarOpen }) {
   const navigate = useNavigate();
 
   /* =======================================================
-     STATES
+     GENERAL STATES
   ======================================================= */
 
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const [userProfile, setUserProfile] = useState(() => {
-    return getCurrentUserProfile();
-  });
+  /* =======================================================
+     USER STATE
+  ======================================================= */
+
+  const [user, setUser] = useState(() =>
+    getCurrentUser()
+  );
+
+  const [settings, setSettings] = useState(() =>
+    getSavedSettings()
+  );
+
+  /* =======================================================
+     ACCESSIBILITY
+  ======================================================= */
 
   const [fontScale, setFontScale] = useState(() => {
     const savedScale = localStorage.getItem(
       "niyamdrishti-font-scale"
     );
 
-    return savedScale ? Number(savedScale) : 100;
+    return savedScale
+      ? Number(savedScale)
+      : 100;
   });
 
   const [accessibilityOpen, setAccessibilityOpen] =
     useState(false);
 
-  const [highContrast, setHighContrast] = useState(() => {
-    return (
-      localStorage.getItem(
-        "niyamdrishti-high-contrast"
-      ) === "true"
-    );
-  });
+  const [highContrast, setHighContrast] =
+    useState(() => {
+      return (
+        localStorage.getItem(
+          "niyamdrishti-high-contrast"
+        ) === "true"
+      );
+    });
 
-  const [underlineLinks, setUnderlineLinks] = useState(() => {
-    return (
-      localStorage.getItem(
-        "niyamdrishti-underline-links"
-      ) === "true"
-    );
-  });
+  const [underlineLinks, setUnderlineLinks] =
+    useState(() => {
+      return (
+        localStorage.getItem(
+          "niyamdrishti-underline-links"
+        ) === "true"
+      );
+    });
 
-  const [languageOpen, setLanguageOpen] = useState(false);
-  const [language, setLanguage] = useState("English");
+  /* =======================================================
+     LANGUAGE
+  ======================================================= */
+
+  const [languageOpen, setLanguageOpen] =
+    useState(false);
+
+  const [language, setLanguage] =
+    useState("English");
+
+  /* =======================================================
+     NOTIFICATIONS
+  ======================================================= */
 
   const [notificationsOpen, setNotificationsOpen] =
     useState(false);
 
   /* =======================================================
-     UPDATE USER PROFILE
+     LOAD USER + SETTINGS
   ======================================================= */
 
+  const refreshUserAndSettings = () => {
+    setUser(getCurrentUser());
+    setSettings(getSavedSettings());
+  };
+
   useEffect(() => {
-    const updateUserProfile = () => {
-      setUserProfile(getCurrentUserProfile());
+    refreshUserAndSettings();
+
+    /* -----------------------------------------------------
+       Settings page sends this event after Save Changes
+    ----------------------------------------------------- */
+
+    const handleSettingsUpdate = () => {
+      refreshUserAndSettings();
     };
 
-    // Load profile immediately
-    updateUserProfile();
+    /* -----------------------------------------------------
+       Existing authentication event
+    ----------------------------------------------------- */
 
-    // Existing login/user update event
-    window.addEventListener(
-      "labellens-user-updated",
-      updateUserProfile
-    );
+    const handleUserUpdate = () => {
+      refreshUserAndSettings();
+    };
 
-    // Settings update event
     window.addEventListener(
       "niyamdrishti-settings-updated",
-      updateUserProfile
+      handleSettingsUpdate
     );
 
-    // Browser storage changes
+    window.addEventListener(
+      "labellens-user-updated",
+      handleUserUpdate
+    );
+
+    /* -----------------------------------------------------
+       Cross-tab localStorage updates
+    ----------------------------------------------------- */
+
     window.addEventListener(
       "storage",
-      updateUserProfile
+      refreshUserAndSettings
     );
 
     return () => {
       window.removeEventListener(
-        "labellens-user-updated",
-        updateUserProfile
+        "niyamdrishti-settings-updated",
+        handleSettingsUpdate
       );
 
       window.removeEventListener(
-        "niyamdrishti-settings-updated",
-        updateUserProfile
+        "labellens-user-updated",
+        handleUserUpdate
       );
 
       window.removeEventListener(
         "storage",
-        updateUserProfile
+        refreshUserAndSettings
       );
     };
   }, []);
@@ -242,9 +334,11 @@ function Navbar({ setSidebarOpen }) {
   ======================================================= */
 
   useEffect(() => {
-    const root = document.documentElement;
+    const root =
+      document.documentElement;
 
-    root.style.fontSize = `${fontScale}%`;
+    root.style.fontSize =
+      `${fontScale}%`;
 
     localStorage.setItem(
       "niyamdrishti-font-scale",
@@ -320,7 +414,9 @@ function Navbar({ setSidebarOpen }) {
 
   const skipToMainContent = () => {
     const mainContent =
-      document.getElementById("main-content");
+      document.getElementById(
+        "main-content"
+      );
 
     if (mainContent) {
       mainContent.scrollIntoView({
@@ -336,10 +432,37 @@ function Navbar({ setSidebarOpen }) {
      LANGUAGE
   ======================================================= */
 
-  const selectLanguage = (selectedLanguage) => {
+  const selectLanguage = (
+    selectedLanguage
+  ) => {
     setLanguage(selectedLanguage);
     setLanguageOpen(false);
   };
+
+  /* =======================================================
+     DISPLAY DATA
+  ======================================================= */
+
+  const currentRole =
+    getRoleLabel(user.role);
+
+  const displayName =
+    user.role === "inspector"
+      ? settings.inspectorName ||
+        user.name ||
+        "Inspector"
+      : user.name || currentRole;
+
+  const displayEmail =
+    settings.email ||
+    user.email ||
+    "inspector@example.com";
+
+  const roleSubtitle =
+    getRoleSubtitle(
+      user.role,
+      settings.designation
+    );
 
   /* =======================================================
      RETURN
@@ -390,7 +513,7 @@ function Navbar({ setSidebarOpen }) {
           <div className="h-[70px] flex items-center gap-4">
 
             {/* =================================================
-                HAMBURGER MENU
+                HAMBURGER
             ================================================== */}
 
             <button
@@ -426,12 +549,14 @@ function Navbar({ setSidebarOpen }) {
             </button>
 
             {/* =================================================
-                NIYAMDRISHTI BRAND LOGO
+                NIYAMDRISHTI LOGO
             ================================================== */}
 
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() =>
+                navigate("/")
+              }
               aria-label="NiyamDrishti Home"
               className="
                 shrink-0
@@ -473,13 +598,13 @@ function Navbar({ setSidebarOpen }) {
 
             <div className="flex items-center gap-1.5 ml-auto">
 
-              {/* =================================================
-                  HELP
-              ================================================== */}
+              {/* HELP */}
 
               <button
                 type="button"
-                onClick={() => navigate("/settings")}
+                onClick={() =>
+                  navigate("/settings")
+                }
                 className="
                   hidden
                   lg:flex
@@ -509,7 +634,8 @@ function Navbar({ setSidebarOpen }) {
                   aria-label="Notifications"
                   onClick={() =>
                     setNotificationsOpen(
-                      (current) => !current
+                      (current) =>
+                        !current
                     )
                   }
                   className="
@@ -521,7 +647,6 @@ function Navbar({ setSidebarOpen }) {
                     transition
                   "
                 >
-
                   <Bell size={20} />
 
                   <span
@@ -537,7 +662,6 @@ function Navbar({ setSidebarOpen }) {
                       ring-white
                     "
                   />
-
                 </button>
 
                 {notificationsOpen && (
@@ -566,7 +690,9 @@ function Navbar({ setSidebarOpen }) {
                       <button
                         type="button"
                         onClick={() =>
-                          setNotificationsOpen(false)
+                          setNotificationsOpen(
+                            false
+                          )
                         }
                         className="
                           p-1
@@ -621,22 +747,20 @@ function Navbar({ setSidebarOpen }) {
                     justify-center
                   "
                 >
-
                   <UserCircle
                     size={22}
                     className="text-[#073b67]"
                   />
-
                 </div>
 
-                <div>
+                <div className="min-w-0">
 
-                  <p className="text-sm font-bold text-slate-800">
-                    {userProfile.name}
+                  <p className="text-sm font-bold text-slate-800 truncate max-w-[170px]">
+                    {displayName}
                   </p>
 
-                  <p className="text-[10px] text-slate-500">
-                    {userProfile.designation}
+                  <p className="text-[10px] text-slate-500 truncate max-w-[170px]">
+                    {roleSubtitle}
                   </p>
 
                 </div>
@@ -800,7 +924,9 @@ function Navbar({ setSidebarOpen }) {
                 Skip to main content
               </button>
 
-              <span className="text-white/25">|</span>
+              <span className="text-white/25">
+                |
+              </span>
 
               <button
                 type="button"
@@ -870,7 +996,9 @@ function Navbar({ setSidebarOpen }) {
                 A+
               </button>
 
-              <span className="text-white/25">|</span>
+              <span className="text-white/25">
+                |
+              </span>
 
               {/* ACCESSIBILITY */}
 
@@ -878,7 +1006,8 @@ function Navbar({ setSidebarOpen }) {
                 type="button"
                 onClick={() =>
                   setAccessibilityOpen(
-                    (current) => !current
+                    (current) =>
+                      !current
                   )
                 }
                 className={`
@@ -898,7 +1027,9 @@ function Navbar({ setSidebarOpen }) {
                 <Accessibility size={21} />
               </button>
 
-              <span className="text-white/25">|</span>
+              <span className="text-white/25">
+                |
+              </span>
 
               {/* LANGUAGE */}
 
@@ -908,7 +1039,8 @@ function Navbar({ setSidebarOpen }) {
                   type="button"
                   onClick={() =>
                     setLanguageOpen(
-                      (current) => !current
+                      (current) =>
+                        !current
                     )
                   }
                   className="
@@ -929,7 +1061,9 @@ function Navbar({ setSidebarOpen }) {
                     🌐
                   </span>
 
-                  <span>{language}</span>
+                  <span>
+                    {language}
+                  </span>
 
                   <LanguageChevron
                     size={15}
@@ -967,7 +1101,9 @@ function Navbar({ setSidebarOpen }) {
                     <button
                       type="button"
                       onClick={() =>
-                        selectLanguage("English")
+                        selectLanguage(
+                          "English"
+                        )
                       }
                       className="
                         w-full
@@ -984,8 +1120,11 @@ function Navbar({ setSidebarOpen }) {
 
                       English
 
-                      {language === "English" && (
-                        <Check size={15} />
+                      {language ===
+                        "English" && (
+                        <Check
+                          size={15}
+                        />
                       )}
 
                     </button>
@@ -993,7 +1132,9 @@ function Navbar({ setSidebarOpen }) {
                     <button
                       type="button"
                       onClick={() =>
-                        selectLanguage("हिन्दी")
+                        selectLanguage(
+                          "हिन्दी"
+                        )
                       }
                       className="
                         w-full
@@ -1010,8 +1151,11 @@ function Navbar({ setSidebarOpen }) {
 
                       हिन्दी
 
-                      {language === "हिन्दी" && (
-                        <Check size={15} />
+                      {language ===
+                        "हिन्दी" && (
+                        <Check
+                          size={15}
+                        />
                       )}
 
                     </button>
@@ -1185,7 +1329,8 @@ function Navbar({ setSidebarOpen }) {
                 type="button"
                 onClick={() =>
                   setHighContrast(
-                    (current) => !current
+                    (current) =>
+                      !current
                   )
                 }
                 className={`
@@ -1244,7 +1389,8 @@ function Navbar({ setSidebarOpen }) {
                 type="button"
                 onClick={() =>
                   setUnderlineLinks(
-                    (current) => !current
+                    (current) =>
+                      !current
                   )
                 }
                 className={`
@@ -1340,7 +1486,9 @@ function Navbar({ setSidebarOpen }) {
 
             <button
               type="button"
-              onClick={() => setSidebarOpen(true)}
+              onClick={() =>
+                setSidebarOpen(true)
+              }
               className="
                 flex
                 items-center
@@ -1363,7 +1511,9 @@ function Navbar({ setSidebarOpen }) {
 
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() =>
+                navigate("/")
+              }
               className="
                 flex
                 items-center
@@ -1463,7 +1613,9 @@ function Navbar({ setSidebarOpen }) {
 
             <button
               type="button"
-              onClick={() => navigate("/signup")}
+              onClick={() =>
+                navigate("/signup")
+              }
               className="
                 ml-auto
                 shrink-0
@@ -1503,7 +1655,7 @@ function Navbar({ setSidebarOpen }) {
       </nav>
 
       {/* =====================================================
-          HERO / MAIN CONTENT
+          HERO
       ====================================================== */}
 
       <section
@@ -1519,7 +1671,7 @@ function Navbar({ setSidebarOpen }) {
         "
       >
 
-        {/* BACKGROUND IMAGE */}
+        {/* BACKGROUND */}
 
         <div className="absolute inset-0">
 
@@ -1538,7 +1690,7 @@ function Navbar({ setSidebarOpen }) {
 
         </div>
 
-        {/* DARK OVERLAY */}
+        {/* OVERLAY */}
 
         <div
           className="
@@ -1775,8 +1927,6 @@ function Navbar({ setSidebarOpen }) {
               "
             >
 
-              {/* EVIDENCE */}
-
               <div
                 className="
                   flex
@@ -1805,8 +1955,6 @@ function Navbar({ setSidebarOpen }) {
 
               </div>
 
-              {/* DIGITAL RECORDS */}
-
               <div
                 className="
                   flex
@@ -1834,8 +1982,6 @@ function Navbar({ setSidebarOpen }) {
                 Digital records
 
               </div>
-
-              {/* LEGAL METROLOGY */}
 
               <div
                 className="
