@@ -13,7 +13,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
-
 // ============================================================
 // API
 // ============================================================
@@ -84,7 +83,7 @@ function Analytics() {
 
 
   // ==========================================================
-  // FETCH REAL INSPECTIONS + RULE RESULTS
+  // FETCH REAL DATABASE DATA
   // ==========================================================
 
   useEffect(() => {
@@ -111,10 +110,11 @@ function Analytics() {
 
         const data = await response.json();
 
-        const inspections =
-          Array.isArray(data?.inspections)
-            ? data.inspections
-            : [];
+        const inspections = Array.isArray(
+          data?.inspections
+        )
+          ? data.inspections
+          : [];
 
         if (cancelled) return;
 
@@ -122,7 +122,7 @@ function Analytics() {
 
 
         // ----------------------------------------------------
-        // Fetch detailed data for every inspection
+        // No inspections
         // ----------------------------------------------------
 
         if (inspections.length === 0) {
@@ -130,6 +130,13 @@ function Analytics() {
           return;
         }
 
+
+        // ----------------------------------------------------
+        // Fetch detailed inspection records
+        //
+        // Rule results are stored at the inspection level,
+        // so they are retrieved from the real backend.
+        // ----------------------------------------------------
 
         const detailResponses =
           await Promise.all(
@@ -141,6 +148,10 @@ function Analytics() {
                   );
 
                 if (!detailResponse.ok) {
+                  console.error(
+                    `Failed to fetch inspection ${inspection.id}: ${detailResponse.status}`
+                  );
+
                   return null;
                 }
 
@@ -158,8 +169,11 @@ function Analytics() {
           );
 
 
+        if (cancelled) return;
+
+
         // ----------------------------------------------------
-        // Extract rule results
+        // Extract actual rule results
         // ----------------------------------------------------
 
         const allRuleResults =
@@ -212,7 +226,7 @@ function Analytics() {
 
 
   // ==========================================================
-  // BUILD REAL ANALYTICS DATA
+  // BUILD ANALYTICS FROM DATABASE DATA
   // ==========================================================
 
   const analyticsData = useMemo(() => {
@@ -248,7 +262,7 @@ function Analytics() {
 
 
     // --------------------------------------------------------
-    // TOTAL
+    // TOTAL INSPECTIONS
     // --------------------------------------------------------
 
     const totalInspections =
@@ -258,31 +272,33 @@ function Analytics() {
     const compliant =
       realCompliant;
 
-
     const potentialViolations =
       realViolations;
-
 
     const needsReview =
       realReview;
 
 
     // --------------------------------------------------------
-    // REAL COMPLIANCE RATE
+    // COMPLIANCE RATE
     //
-    // Uses each inspection's actual compliance_percentage.
+    // Uses the actual compliance_percentage stored against
+    // each inspection in the database.
     // --------------------------------------------------------
 
     const validComplianceValues =
       databaseInspections
-        .map((inspection) =>
-          Number(
+        .map((inspection) => {
+          const value = Number(
             inspection?.compliance_percentage
-          )
-        )
+          );
+
+          return Number.isFinite(value)
+            ? value
+            : null;
+        })
         .filter(
-          (value) =>
-            Number.isFinite(value)
+          (value) => value !== null
         );
 
 
@@ -302,7 +318,7 @@ function Analytics() {
 
 
     // --------------------------------------------------------
-    // REAL MONTHLY INSPECTION GRAPH
+    // MONTHLY INSPECTION TREND
     // --------------------------------------------------------
 
     const monthlyMap = {};
@@ -334,7 +350,6 @@ function Analytics() {
         const year =
           date.getFullYear();
 
-
         const month =
           date.getMonth();
 
@@ -349,12 +364,13 @@ function Analytics() {
 
           monthlyMap[key] = {
             key,
-            month: date.toLocaleDateString(
-              "en-IN",
-              {
-                month: "short",
-              }
-            ),
+            month:
+              date.toLocaleDateString(
+                "en-IN",
+                {
+                  month: "short",
+                }
+              ),
             year,
             inspections: 0,
           };
@@ -374,13 +390,21 @@ function Analytics() {
           a.key.localeCompare(
             b.key
           )
-        );
+        )
+        .map((item) => ({
+          ...item,
+
+          // Show the year when more than one year
+          // exists in the dataset.
+          label: item.month,
+        }));
 
 
     // --------------------------------------------------------
     // REAL VIOLATION CATEGORIES
     //
-    // Count actual rule_results whose status is VIOLATION.
+    // Only actual rule results marked as VIOLATION
+    // are counted.
     // --------------------------------------------------------
 
     const violationMap = {};
@@ -433,6 +457,7 @@ function Analytics() {
           ([name, count]) => ({
             name,
             count,
+
             percentage:
               totalViolationCount > 0
                 ? Math.round(
@@ -812,8 +837,6 @@ function Analytics() {
           </div>
 
 
-          {/* Real Bar Chart */}
-
           {monthlyInspections.length === 0 ? (
 
             <div className="h-64 flex items-center justify-center">
@@ -867,7 +890,7 @@ function Analytics() {
 
 
                     <span className="text-xs text-slate-500">
-                      {item.month}
+                      {item.label}
                     </span>
 
                   </div>
@@ -913,6 +936,7 @@ function Analytics() {
                          text-green-600"
             >
               <PieChart size={20} />
+
             </div>
 
           </div>
