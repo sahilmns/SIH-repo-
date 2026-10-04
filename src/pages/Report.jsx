@@ -36,42 +36,62 @@ const API_URL =
 
 
 // ============================================================
-// HELPERS
+// STATUS HELPERS
 // ============================================================
 
-function getStatusLabel(status) {
-  const normalized = String(status || "").toUpperCase();
+function normalizeStatus(status) {
+  const value = String(status || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
 
   if (
-    normalized === "PASS" ||
-    normalized === "PASSED" ||
-    normalized === "COMPLIANT"
+    [
+      "PASS",
+      "PASSED",
+      "COMPLIANT",
+      "VERIFIED_COMPLIANT",
+      "COMPLIANT_WITH_ALL_CHECKS",
+    ].includes(value)
   ) {
+    return "COMPLIANT";
+  }
+
+  if (
+    [
+      "VIOLATION",
+      "VIOLATIONS",
+      "FAIL",
+      "FAILED",
+      "NON_COMPLIANT",
+    ].includes(value)
+  ) {
+    return "VIOLATION";
+  }
+
+  return "REVIEW";
+}
+
+
+function getStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "COMPLIANT") {
     return "VERIFIED";
   }
 
-  if (
-    normalized === "PARTIAL" ||
-    normalized === "UNCERTAIN" ||
-    normalized === "NEEDS REVIEW" ||
-    normalized === "REQUIRES_ADDITIONAL_IMAGE" ||
-    normalized === "REVIEW"
-  ) {
-    return "NEEDS REVIEW";
+  if (normalized === "VIOLATION") {
+    return "VIOLATION";
   }
 
-  return "VIOLATION";
+  return "NEEDS REVIEW";
 }
 
 
 function getStatusClasses(status) {
-  const normalized = String(status || "").toUpperCase();
+  const normalized = normalizeStatus(status);
 
-  if (
-    normalized === "PASS" ||
-    normalized === "PASSED" ||
-    normalized === "COMPLIANT"
-  ) {
+  if (normalized === "COMPLIANT") {
     return {
       container: "border-green-200 bg-green-50",
       icon: "text-green-600",
@@ -79,13 +99,7 @@ function getStatusClasses(status) {
     };
   }
 
-  if (
-    normalized === "PARTIAL" ||
-    normalized === "UNCERTAIN" ||
-    normalized === "NEEDS REVIEW" ||
-    normalized === "REQUIRES_ADDITIONAL_IMAGE" ||
-    normalized === "REVIEW"
-  ) {
+  if (normalized === "REVIEW") {
     return {
       container: "border-amber-200 bg-amber-50",
       icon: "text-amber-600",
@@ -101,83 +115,15 @@ function getStatusClasses(status) {
 }
 
 
-function formatConfidence(confidence) {
-  const value = Number(confidence);
-
-  if (!Number.isFinite(value)) {
-    return null;
-  }
-
-  const percentage =
-    value <= 1
-      ? value * 100
-      : value;
-
-  return `${Math.max(
-    0,
-    Math.min(100, Math.round(percentage))
-  )}%`;
-}
-
-
-function formatDate(dateValue) {
-  if (!dateValue) {
-    return "Not recorded";
-  }
-
-  const date = new Date(dateValue);
-
-  if (Number.isNaN(date.getTime())) {
-    return String(dateValue);
-  }
-
-  return date.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-
 function getFinalStatus(report) {
-  const status = String(
-    report?.status || ""
-  ).toUpperCase();
-
-  if (
-    status === "PASS" ||
-    status === "PASSED" ||
-    status === "COMPLIANT"
-  ) {
-    return "COMPLIANT";
-  }
-
-  if (
-    status === "PARTIAL" ||
-    status === "UNCERTAIN" ||
-    status === "NEEDS REVIEW" ||
-    status === "REQUIRES_ADDITIONAL_IMAGE" ||
-    status === "REVIEW"
-  ) {
-    return "NEEDS REVIEW";
-  }
-
-  if (
-    status === "VIOLATION" ||
-    status === "FAIL" ||
-    status === "FAILED" ||
-    status === "NON-COMPLIANT" ||
-    status === "NON_COMPLIANT"
-  ) {
-    return "NON-COMPLIANT";
-  }
-
-  return "NEEDS REVIEW";
+  return normalizeStatus(report?.status);
 }
 
 
 function FinalStatusIcon({ status }) {
-  if (status === "COMPLIANT") {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "COMPLIANT") {
     return (
       <div className="w-14 h-14 shrink-0 rounded-full bg-green-100 flex items-center justify-center">
         <CheckCircle2
@@ -188,7 +134,7 @@ function FinalStatusIcon({ status }) {
     );
   }
 
-  if (status === "NON-COMPLIANT") {
+  if (normalized === "VIOLATION") {
     return (
       <div className="w-14 h-14 shrink-0 rounded-full bg-red-100 flex items-center justify-center">
         <AlertTriangle
@@ -211,7 +157,7 @@ function FinalStatusIcon({ status }) {
 
 
 // ============================================================
-// GENERIC VALUE HELPERS
+// GENERIC HELPERS
 // ============================================================
 
 function getRuleName(rule) {
@@ -282,6 +228,57 @@ function findRule(checks, keywords) {
 }
 
 
+function formatConfidence(confidence) {
+  const value = Number(confidence);
+
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  const percentage =
+    value <= 1
+      ? value * 100
+      : value;
+
+  return `${Math.max(
+    0,
+    Math.min(100, Math.round(percentage))
+  )}%`;
+}
+
+
+function formatDate(dateValue) {
+  if (!dateValue) {
+    return "Not recorded";
+  }
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(dateValue);
+  }
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+
+function formatInspectionType(type) {
+  if (!type) {
+    return "Not recorded";
+  }
+
+  return String(type)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) =>
+      letter.toUpperCase()
+    );
+}
+
+
 // ============================================================
 // REPORT COMPONENT
 // ============================================================
@@ -297,7 +294,7 @@ function Report() {
 
 
   // ==========================================================
-  // SELECTED DATABASE INSPECTION ID
+  // SELECTED DATABASE ID
   // ==========================================================
 
   const selectedInspectionId =
@@ -311,7 +308,7 @@ function Report() {
   const [
     inspection,
     setInspection,
-  ] = useState(currentInspection || null);
+  ] = useState(null);
 
   const [
     loading,
@@ -331,401 +328,389 @@ function Report() {
   useEffect(() => {
     let cancelled = false;
 
+
     async function loadInspection() {
 
-      /*
-       * If this report was opened from Reports,
-       * selectedInspectionId exists and we MUST fetch
-       * the selected database record.
-       */
+      // ------------------------------------------------------
+      // If opened from Reports, ALWAYS use the database ID.
+      // ------------------------------------------------------
 
-      if (!selectedInspectionId) {
-        setInspection(
-          currentInspection || null
-        );
+      if (selectedInspectionId) {
+
+        try {
+          setLoading(true);
+          setLoadError("");
+          setInspection(null);
+
+
+          const response = await fetch(
+            `${API_URL}/inspections/${encodeURIComponent(
+              selectedInspectionId
+            )}`
+          );
+
+
+          if (!response.ok) {
+            throw new Error(
+              `Inspection could not be loaded (${response.status})`
+            );
+          }
+
+
+          const data = await response.json();
+
+
+          if (cancelled) {
+            return;
+          }
+
+
+          const backendInspection =
+            data?.inspection ||
+            data?.data?.inspection ||
+            data;
+
+
+          if (!backendInspection) {
+            throw new Error(
+              "Inspection data was not returned by the server."
+            );
+          }
+
+
+          const backendImages =
+            data?.images ||
+            backendInspection?.images ||
+            [];
+
+
+          const backendRuleResults =
+            data?.rule_results ||
+            backendInspection?.rule_results ||
+            data?.ruleResults ||
+            [];
+
+
+          // --------------------------------------------------
+          // Normalize rule results
+          // --------------------------------------------------
+
+          const complianceChecks =
+            Array.isArray(backendRuleResults)
+              ? backendRuleResults.map((rule) => ({
+                  ...rule,
+
+                  name:
+                    rule?.rule_name ||
+                    rule?.name ||
+                    rule?.rule ||
+                    rule?.rule_code ||
+                    "Compliance Check",
+
+                  rule_name:
+                    rule?.rule_name ||
+                    rule?.name ||
+                    rule?.rule ||
+                    rule?.rule_code,
+
+                  status:
+                    rule?.status ||
+                    "PARTIAL",
+
+                  value:
+                    getRuleValue(rule),
+
+                  confidence:
+                    rule?.confidence,
+
+                  source_text:
+                    rule?.source_text ||
+                    rule?.result_data?.source_text ||
+                    null,
+
+                  bounding_box:
+                    rule?.bounding_box ||
+                    rule?.result_data?.bounding_box ||
+                    null,
+                }))
+              : [];
+
+
+          // --------------------------------------------------
+          // Summary
+          // --------------------------------------------------
+
+          const totalChecks =
+            backendInspection?.total_checks ??
+            complianceChecks.length;
+
+
+          const passedChecks =
+            backendInspection?.passed_checks ??
+            complianceChecks.filter(
+              (rule) =>
+                normalizeStatus(rule?.status) ===
+                "COMPLIANT"
+            ).length;
+
+
+          const failedChecks =
+            backendInspection?.failed_checks ??
+            complianceChecks.filter(
+              (rule) =>
+                normalizeStatus(rule?.status) ===
+                "VIOLATION"
+            ).length;
+
+
+          const partialChecks =
+            backendInspection?.partial_checks ??
+            complianceChecks.filter(
+              (rule) =>
+                normalizeStatus(rule?.status) ===
+                "REVIEW"
+            ).length;
+
+
+          // --------------------------------------------------
+          // Compliance report
+          // --------------------------------------------------
+
+          const complianceReport = {
+
+            status:
+              backendInspection?.overall_status ||
+              backendInspection?.status ||
+              "REVIEW",
+
+            compliance_percentage:
+              backendInspection?.compliance_percentage,
+
+            summary: {
+              total_checks: totalChecks,
+              passed: passedChecks,
+              failed: failedChecks,
+              partial: partialChecks,
+            },
+
+            checks:
+              complianceChecks,
+          };
+
+
+          // --------------------------------------------------
+          // Images
+          // --------------------------------------------------
+
+          const normalizedImages =
+            Array.isArray(backendImages)
+              ? backendImages.map((image) => {
+
+                  const imageUrl =
+                    image?.url ||
+                    image?.image_url ||
+                    image?.imageUrl ||
+                    (
+                      image?.id
+                        ? `${API_URL}/inspection-images/${image.id}`
+                        : null
+                    );
+
+
+                  return {
+                    ...image,
+
+                    id:
+                      image?.id,
+
+                    preview:
+                      imageUrl,
+
+                    url:
+                      imageUrl,
+
+                    original_filename:
+                      image?.original_filename ||
+                      image?.filename ||
+                      "Inspection Image",
+                  };
+                })
+              : [];
+
+
+          // --------------------------------------------------
+          // Product values
+          // --------------------------------------------------
+
+          const productRule =
+            findRule(
+              complianceChecks,
+              [
+                "product name",
+                "product / common",
+                "common / generic",
+                "generic name",
+              ]
+            );
+
+
+          const netQuantityRule =
+            findRule(
+              complianceChecks,
+              [
+                "net quantity",
+                "net weight",
+                "net content",
+              ]
+            );
+
+
+          const mrpRule =
+            findRule(
+              complianceChecks,
+              [
+                "mrp",
+                "maximum retail price",
+              ]
+            );
+
+
+          const productName =
+            backendInspection?.product_name ||
+            productRule?.value ||
+            productRule?.result_data?.product_name ||
+            null;
+
+
+          const netQuantity =
+            backendInspection?.net_quantity ||
+            netQuantityRule?.value ||
+            netQuantityRule?.result_data?.net_quantity ||
+            null;
+
+
+          const mrp =
+            backendInspection?.mrp ||
+            mrpRule?.value ||
+            mrpRule?.result_data?.mrp ||
+            null;
+
+
+          // --------------------------------------------------
+          // Final inspection object
+          // --------------------------------------------------
+
+          const normalizedInspection = {
+
+            ...backendInspection,
+
+            id:
+              backendInspection?.id,
+
+            inspectionCode:
+              backendInspection?.inspection_code ||
+              null,
+
+            inspectionStatus:
+              backendInspection?.status ||
+              null,
+
+            productName,
+
+            brandName:
+              backendInspection?.brand_name ||
+              null,
+
+            category:
+              backendInspection?.category ||
+              null,
+
+            mrp,
+
+            netQuantity,
+
+            inspectionType:
+              backendInspection?.inspection_type ||
+              null,
+
+            averageOcrConfidence:
+              backendInspection?.average_ocr_confidence,
+
+            createdAt:
+              backendInspection?.created_at,
+
+            completedAt:
+              backendInspection?.completed_at,
+
+            images:
+              normalizedImages,
+
+            complianceResult: {
+              compliance_report:
+                complianceReport,
+
+              inspection: {
+                average_ocr_confidence:
+                  backendInspection?.average_ocr_confidence,
+              },
+            },
+          };
+
+
+          setInspection(
+            normalizedInspection
+          );
+
+        } catch (error) {
+
+          console.error(
+            "NiyamDrishti report loading error:",
+            error
+          );
+
+
+          if (!cancelled) {
+
+            setLoadError(
+              error?.message ||
+              "Unable to load this inspection."
+            );
+
+            setInspection(null);
+          }
+
+        } finally {
+
+          if (!cancelled) {
+            setLoading(false);
+          }
+
+        }
 
         return;
       }
 
 
-      try {
-        setLoading(true);
-        setLoadError("");
-
-
-        const response = await fetch(
-          `${API_URL}/inspections/${encodeURIComponent(
-            selectedInspectionId
-          )}`
-        );
-
-
-        if (!response.ok) {
-          throw new Error(
-            `Inspection could not be loaded (${response.status})`
-          );
-        }
-
-
-        const data = await response.json();
-
-
-        if (cancelled) {
-          return;
-        }
-
-
-        /*
-         * The backend may return:
-         *
-         * {
-         *   inspection: {...},
-         *   images: [...],
-         *   ocr_detections: [...],
-         *   rule_results: [...]
-         * }
-         *
-         * or the inspection object directly.
-         */
-
-        const backendInspection =
-          data?.inspection ||
-          data?.data?.inspection ||
-          data;
-
-
-        const backendImages =
-          data?.images ||
-          backendInspection?.images ||
-          [];
-
-
-        const backendRuleResults =
-          data?.rule_results ||
-          backendInspection?.rule_results ||
-          data?.ruleResults ||
-          [];
-
-
-        // ======================================================
-        // NORMALIZE RULE RESULTS
-        // ======================================================
-
-        const complianceChecks =
-          Array.isArray(backendRuleResults)
-            ? backendRuleResults.map((rule) => ({
-                ...rule,
-
-                name:
-                  rule?.rule_name ||
-                  rule?.name ||
-                  rule?.rule ||
-                  rule?.rule_code,
-
-                rule_name:
-                  rule?.rule_name ||
-                  rule?.name ||
-                  rule?.rule,
-
-                status:
-                  rule?.status ||
-                  "PARTIAL",
-
-                value:
-                  getRuleValue(rule),
-
-                confidence:
-                  rule?.confidence,
-
-                source_text:
-                  rule?.source_text ||
-                  rule?.result_data?.source_text ||
-                  null,
-
-                bounding_box:
-                  rule?.bounding_box ||
-                  rule?.result_data?.bounding_box ||
-                  null,
-              }))
-            : [];
-
-
-        // ======================================================
-        // CREATE COMPLIANCE REPORT OBJECT
-        // ======================================================
-
-        const complianceReport = {
-
-          status:
-            backendInspection?.overall_status ||
-            backendInspection?.status ||
-            "REVIEW",
-
-          compliance_percentage:
-            backendInspection?.compliance_percentage,
-
-          summary: {
-
-            total_checks:
-              backendInspection?.total_checks ??
-              complianceChecks.length,
-
-            passed:
-              backendInspection?.passed_checks ??
-              complianceChecks.filter(
-                (check) =>
-                  ["PASS", "PASSED"].includes(
-                    String(
-                      check?.status || ""
-                    ).toUpperCase()
-                  )
-              ).length,
-
-            failed:
-              backendInspection?.failed_checks ??
-              complianceChecks.filter(
-                (check) =>
-                  [
-                    "VIOLATION",
-                    "FAIL",
-                    "FAILED",
-                    "NON-COMPLIANT",
-                    "NON_COMPLIANT",
-                  ].includes(
-                    String(
-                      check?.status || ""
-                    ).toUpperCase()
-                  )
-              ).length,
-
-            partial:
-              backendInspection?.partial_checks ??
-              complianceChecks.filter(
-                (check) =>
-                  [
-                    "PARTIAL",
-                    "UNCERTAIN",
-                    "NEEDS REVIEW",
-                    "REQUIRES_ADDITIONAL_IMAGE",
-                    "REVIEW",
-                  ].includes(
-                    String(
-                      check?.status || ""
-                    ).toUpperCase()
-                  )
-              ).length,
-          },
-
-          checks:
-            complianceChecks,
-        };
-
-
-        // ======================================================
-        // BUILD IMAGE OBJECTS
-        // ======================================================
-
-        const normalizedImages =
-          Array.isArray(backendImages)
-            ? backendImages.map((image) => {
-
-                /*
-                 * Prefer a backend URL if the API already
-                 * supplies one.
-                 */
-
-                const imageUrl =
-                  image?.url ||
-                  image?.image_url ||
-                  image?.imageUrl ||
-                  (
-                    image?.id
-                      ? `${API_URL}/inspection-images/${image.id}`
-                      : null
-                  );
-
-                return {
-                  ...image,
-
-                  id:
-                    image?.id,
-
-                  preview:
-                    imageUrl,
-
-                  url:
-                    imageUrl,
-
-                  original_filename:
-                    image?.original_filename ||
-                    image?.filename ||
-                    "Inspection Image",
-                };
-              })
-            : [];
-
-
-        // ======================================================
-        // PRODUCT NAME FALLBACK
-        // ======================================================
-
-        const productRule =
-          findRule(
-            complianceChecks,
-            [
-              "product name",
-              "product / common",
-              "common / generic",
-              "generic name",
-            ]
-          );
-
-
-        const netQuantityRule =
-          findRule(
-            complianceChecks,
-            [
-              "net quantity",
-              "net weight",
-              "net content",
-            ]
-          );
-
-
-        const mrpRule =
-          findRule(
-            complianceChecks,
-            ["mrp", "maximum retail price"]
-          );
-
-
-        const detectedProductName =
-          backendInspection?.product_name ||
-          backendInspection?.productName ||
-          productRule?.value ||
-          productRule?.result_data?.product_name ||
-          productRule?.product_name ||
-          null;
-
-
-        const detectedNetQuantity =
-          backendInspection?.net_quantity ||
-          backendInspection?.netQuantity ||
-          netQuantityRule?.value ||
-          netQuantityRule?.result_data?.net_quantity ||
-          null;
-
-
-        const detectedMrp =
-          backendInspection?.mrp ||
-          mrpRule?.value ||
-          mrpRule?.result_data?.mrp ||
-          null;
-
-
-        // ======================================================
-        // FINAL NORMALIZED INSPECTION
-        // ======================================================
-
-        const normalizedInspection = {
-
-          ...backendInspection,
-
-          id:
-            backendInspection?.id,
-
-          inspectionCode:
-            backendInspection?.inspection_code ||
-            backendInspection?.inspectionCode,
-
-          backendInspectionId:
-            backendInspection?.id,
-
-          inspectionStatus:
-            backendInspection?.status,
-
-          productName:
-            detectedProductName,
-
-          brandName:
-            backendInspection?.brand_name ||
-            backendInspection?.brandName ||
-            "",
-
-          category:
-            backendInspection?.category ||
-            "",
-
-          mrp:
-            detectedMrp,
-
-          netQuantity:
-            detectedNetQuantity,
-
-          inspectionType:
-            backendInspection?.inspection_type ||
-            "physical",
-
-          averageOcrConfidence:
-            backendInspection?.average_ocr_confidence,
-
-          createdAt:
-            backendInspection?.created_at,
-
-          completedAt:
-            backendInspection?.completed_at,
-
-          images:
-            normalizedImages,
-
-          complianceResult: {
-            compliance_report:
-              complianceReport,
-
-            inspection: {
-              average_ocr_confidence:
-                backendInspection?.average_ocr_confidence,
-            },
-          },
-        };
-
-
-        setInspection(
-          normalizedInspection
-        );
-
-      } catch (error) {
-
-        console.error(
-          "NiyamDrishti report loading error:",
-          error
-        );
-
-
-        if (!cancelled) {
-          setLoadError(
-            error?.message ||
-              "Unable to load this inspection."
-          );
-
-          /*
-           * Very important:
-           * do NOT fall back to currentInspection here.
-           *
-           * Otherwise clicking another report could again
-           * show the previous scanned product.
-           */
-
+      // ------------------------------------------------------
+      // No database ID.
+      //
+      // This means the report was opened directly from the
+      // current inspection workflow.
+      // ------------------------------------------------------
+
+      if (!cancelled) {
+
+        if (currentInspection) {
+          setInspection(currentInspection);
+        } else {
           setInspection(null);
-        }
-
-      } finally {
-
-        if (!cancelled) {
-          setLoading(false);
+          setLoadError(
+            "No inspection is available for this report."
+          );
         }
 
       }
+
     }
 
 
@@ -743,7 +728,7 @@ function Report() {
 
 
   // ==========================================================
-  // LOADING SCREEN
+  // LOADING
   // ==========================================================
 
   if (loading) {
@@ -770,7 +755,7 @@ function Report() {
 
 
   // ==========================================================
-  // ERROR SCREEN
+  // ERROR
   // ==========================================================
 
   if (loadError || !inspection) {
@@ -801,7 +786,9 @@ function Report() {
 
 
           <button
-            onClick={() => navigate("/reports")}
+            onClick={() =>
+              navigate("/reports")
+            }
             className="mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700"
           >
             Back to Reports
@@ -824,10 +811,8 @@ function Report() {
   const report =
     result?.compliance_report || {};
 
-
   const summary =
     report?.summary || {};
-
 
   const checks =
     Array.isArray(report?.checks)
@@ -845,59 +830,27 @@ function Report() {
 
   const productName =
     inspection?.productName ||
-    result?.product_name ||
-    result?.productName ||
-    findRule(
-      checks,
-      [
-        "product name",
-        "product / common",
-        "common / generic",
-        "generic name",
-      ]
-    )?.value ||
-    "Not detected";
+    "Not recorded";
 
 
   const brandName =
     inspection?.brandName ||
-    result?.brand_name ||
-    result?.brandName ||
-    "Not available";
+    "Not recorded";
 
 
   const category =
     inspection?.category ||
-    result?.category ||
-    "Not available";
+    "Not recorded";
 
 
   const netQuantity =
     inspection?.netQuantity ||
-    result?.net_quantity ||
-    result?.netQuantity ||
-    findRule(
-      checks,
-      [
-        "net quantity",
-        "net weight",
-        "net content",
-      ]
-    )?.value ||
-    "Not detected";
+    "Not recorded";
 
 
   const mrp =
     inspection?.mrp ||
-    result?.mrp ||
-    findRule(
-      checks,
-      [
-        "mrp",
-        "maximum retail price",
-      ]
-    )?.value ||
-    "Not detected";
+    "Not recorded";
 
 
   // ==========================================================
@@ -906,15 +859,17 @@ function Report() {
 
   const inspectionId =
     inspection?.inspectionCode ||
-    inspection?.inspection_code ||
-    inspection?.backendInspectionId ||
     inspection?.id ||
     "Not assigned";
 
 
   const reportId =
     inspection?.reportId ||
-    `ND-RPT-${inspectionId}`;
+    (
+      inspection?.inspectionCode
+        ? `ND-RPT-${inspection.inspectionCode}`
+        : "Not assigned"
+    );
 
 
   // ==========================================================
@@ -942,8 +897,7 @@ function Report() {
 
   const inspectionDate =
     inspection?.createdAt ||
-    inspection?.created_at ||
-    result?.created_at;
+    inspection?.created_at;
 
 
   // ==========================================================
@@ -951,83 +905,37 @@ function Report() {
   // ==========================================================
 
   const passedChecks =
-    Number.isFinite(
-      Number(summary.passed)
-    )
-      ? Number(summary.passed)
-      : checks.filter(
-          (check) =>
-            [
-              "PASS",
-              "PASSED",
-            ].includes(
-              String(
-                check?.status || ""
-              ).toUpperCase()
-            )
-        ).length;
+    Number(summary.passed) || 0;
 
 
   const failedChecks =
-    Number.isFinite(
-      Number(summary.failed)
-    )
-      ? Number(summary.failed)
-      : checks.filter(
-          (check) =>
-            [
-              "VIOLATION",
-              "FAIL",
-              "FAILED",
-              "NON-COMPLIANT",
-              "NON_COMPLIANT",
-            ].includes(
-              String(
-                check?.status || ""
-              ).toUpperCase()
-            )
-        ).length;
+    Number(summary.failed) || 0;
 
 
   const partialChecks =
-    Number.isFinite(
-      Number(summary.partial)
-    )
-      ? Number(summary.partial)
-      : checks.filter(
-          (check) =>
-            [
-              "PARTIAL",
-              "UNCERTAIN",
-              "NEEDS REVIEW",
-              "REQUIRES_ADDITIONAL_IMAGE",
-              "REVIEW",
-            ].includes(
-              String(
-                check?.status || ""
-              ).toUpperCase()
-            )
-        ).length;
+    Number(summary.partial) || 0;
 
 
   const totalChecks =
-    Number.isFinite(
-      Number(summary.total_checks)
-    )
-      ? Number(summary.total_checks)
-      : checks.length;
+    Number(summary.total_checks) ||
+    checks.length;
 
 
   // ==========================================================
   // COMPLIANCE PERCENTAGE
   // ==========================================================
 
+  const rawCompliancePercentage =
+    report?.compliance_percentage;
+
+
   const compliancePercentage =
-    report?.compliance_percentage !== undefined &&
-    report?.compliance_percentage !== null
-      ? Number(
-          report.compliance_percentage
-        )
+    rawCompliancePercentage !== undefined &&
+    rawCompliancePercentage !== null &&
+    Number.isFinite(
+      Number(rawCompliancePercentage)
+    )
+      ? Number(rawCompliancePercentage)
       : null;
 
 
@@ -1046,6 +954,11 @@ function Report() {
   // ==========================================================
   // ACTIONS
   // ==========================================================
+
+  const handlePrint = () => {
+    window.print();
+  };
+
 
   const handleDownload = () => {
     window.print();
@@ -1115,8 +1028,6 @@ function Report() {
         </div>
 
 
-        {/* Report ID */}
-
         <div className="text-left lg:text-right">
 
           <p className="text-xs text-slate-400 uppercase tracking-wide">
@@ -1146,30 +1057,30 @@ function Report() {
               status={finalStatus}
             />
 
-
             <div>
 
               <p className="text-sm text-slate-500">
                 Final Inspection Assessment
               </p>
 
-
               <h2
                 className={`text-lg sm:text-xl font-bold mt-1 ${
                   finalStatus === "COMPLIANT"
                     ? "text-green-600"
-                    : finalStatus ===
-                      "NON-COMPLIANT"
+                    : finalStatus === "VIOLATION"
                     ? "text-red-600"
                     : "text-amber-600"
                 }`}
               >
-                {finalStatus}
+                {finalStatus === "COMPLIANT"
+                  ? "COMPLIANT"
+                  : finalStatus === "VIOLATION"
+                  ? "NON-COMPLIANT"
+                  : "NEEDS REVIEW"}
               </h2>
 
-
               <p className="text-sm text-slate-500 mt-1">
-                Based on the current compliance analysis
+                Based on the stored compliance analysis
               </p>
 
             </div>
@@ -1180,9 +1091,7 @@ function Report() {
           <div className="flex flex-col sm:flex-row gap-3">
 
             <button
-              onClick={() =>
-                window.print()
-              }
+              onClick={handlePrint}
               className="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
 
@@ -1233,9 +1142,6 @@ function Report() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 
-
-          {/* Total */}
-
           <div className="bg-slate-50 rounded-xl p-4">
 
             <p className="text-xs text-slate-400 uppercase">
@@ -1248,8 +1154,6 @@ function Report() {
 
           </div>
 
-
-          {/* Passed */}
 
           <div className="bg-green-50 rounded-xl p-4">
 
@@ -1264,8 +1168,6 @@ function Report() {
           </div>
 
 
-          {/* Review */}
-
           <div className="bg-amber-50 rounded-xl p-4">
 
             <p className="text-xs text-amber-600 uppercase">
@@ -1278,8 +1180,6 @@ function Report() {
 
           </div>
 
-
-          {/* Violations */}
 
           <div className="bg-red-50 rounded-xl p-4">
 
@@ -1296,50 +1196,52 @@ function Report() {
         </div>
 
 
-        {/* Compliance bar */}
+        {compliancePercentage !== null && (
 
-        {compliancePercentage !== null &&
-          Number.isFinite(
-            compliancePercentage
-          ) && (
+          <div className="mt-5">
 
-            <div className="mt-5">
+            <div className="flex items-center justify-between mb-2">
 
-              <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-slate-700">
+                Compliance Percentage
+              </p>
 
-                <p className="text-sm font-medium text-slate-700">
-                  Compliance Percentage
-                </p>
-
-                <p className="text-sm font-bold text-slate-900">
-                  {Math.round(
-                    compliancePercentage
-                  )}
-                  %
-                </p>
-
-              </div>
-
-
-              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-
-                <div
-                  className="h-full bg-blue-600 rounded-full"
-                  style={{
-                    width: `${Math.max(
-                      0,
-                      Math.min(
-                        100,
-                        compliancePercentage
-                      )
-                    )}%`,
-                  }}
-                />
-
-              </div>
+              <p className="text-sm font-bold text-slate-900">
+                {Math.round(
+                  Math.max(
+                    0,
+                    Math.min(
+                      100,
+                      compliancePercentage
+                    )
+                  )
+                )}
+                %
+              </p>
 
             </div>
-          )}
+
+
+            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+
+              <div
+                className="h-full bg-blue-600 rounded-full"
+                style={{
+                  width: `${Math.max(
+                    0,
+                    Math.min(
+                      100,
+                      compliancePercentage
+                    )
+                  )}%`,
+                }}
+              />
+
+            </div>
+
+          </div>
+
+        )}
 
       </div>
 
@@ -1366,9 +1268,6 @@ function Report() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
 
-
-          {/* Product */}
-
           <div>
 
             <p className="text-xs text-slate-400 uppercase">
@@ -1381,8 +1280,6 @@ function Report() {
 
           </div>
 
-
-          {/* Brand */}
 
           <div>
 
@@ -1397,8 +1294,6 @@ function Report() {
           </div>
 
 
-          {/* Category */}
-
           <div>
 
             <p className="text-xs text-slate-400 uppercase">
@@ -1411,8 +1306,6 @@ function Report() {
 
           </div>
 
-
-          {/* Net quantity */}
 
           <div>
 
@@ -1427,8 +1320,6 @@ function Report() {
           </div>
 
 
-          {/* MRP */}
-
           <div>
 
             <p className="text-xs text-slate-400 uppercase">
@@ -1436,15 +1327,15 @@ function Report() {
             </p>
 
             <p className="font-semibold text-slate-800 mt-1">
-              {String(mrp).startsWith("₹")
+              {mrp === "Not recorded"
+                ? mrp
+                : String(mrp).startsWith("₹")
                 ? String(mrp)
                 : `₹${mrp}`}
             </p>
 
           </div>
 
-
-          {/* Inspection ID */}
 
           <div>
 
@@ -1476,9 +1367,6 @@ function Report() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-
-          {/* Date */}
-
           <div className="flex items-center gap-3">
 
             <div className="w-10 h-10 shrink-0 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -1489,7 +1377,6 @@ function Report() {
               />
 
             </div>
-
 
             <div>
 
@@ -1508,8 +1395,6 @@ function Report() {
           </div>
 
 
-          {/* Inspector */}
-
           <div className="flex items-center gap-3">
 
             <div className="w-10 h-10 shrink-0 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -1521,7 +1406,6 @@ function Report() {
 
             </div>
 
-
             <div>
 
               <p className="text-xs text-slate-400">
@@ -1530,15 +1414,13 @@ function Report() {
 
               <p className="text-sm font-semibold text-slate-800">
                 {inspection?.inspectorName ||
-                  "Enforcement Officer"}
+                  "Not recorded"}
               </p>
 
             </div>
 
           </div>
 
-
-          {/* Location */}
 
           <div className="flex items-center gap-3">
 
@@ -1551,7 +1433,6 @@ function Report() {
 
             </div>
 
-
             <div>
 
               <p className="text-xs text-slate-400">
@@ -1560,7 +1441,7 @@ function Report() {
 
               <p className="text-sm font-semibold text-slate-800">
                 {inspection?.locationName ||
-                  "Retail Inspection"}
+                  "Not recorded"}
               </p>
 
             </div>
@@ -1597,173 +1478,144 @@ function Report() {
           {checks.length === 0 ? (
 
             <div className="text-center py-10 text-slate-500">
-
               No compliance findings available.
-
             </div>
 
           ) : (
 
-            checks.map(
-              (check, index) => {
+            checks.map((check, index) => {
 
-                const status =
-                  String(
-                    check?.status || ""
-                  ).toUpperCase();
-
-
-                const classes =
-                  getStatusClasses(
-                    status
-                  );
+              const status =
+                normalizeStatus(
+                  check?.status
+                );
 
 
-                const statusLabel =
-                  getStatusLabel(
-                    status
-                  );
+              const classes =
+                getStatusClasses(
+                  status
+                );
 
 
-                const confidence =
-                  formatConfidence(
-                    check?.confidence
-                  );
+              const statusLabel =
+                getStatusLabel(
+                  status
+                );
 
 
-                const checkValue =
-                  getRuleValue(check);
+              const confidence =
+                formatConfidence(
+                  check?.confidence
+                );
 
 
-                return (
-
-                  <div
-                    key={
-                      check?.id ||
-                      check?.rule_code ||
-                      check?.name ||
-                      index
-                    }
-                    className={`border rounded-xl p-4 ${classes.container}`}
-                  >
-
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              const checkValue =
+                getRuleValue(check);
 
 
-                      <div className="flex gap-3">
+              return (
+
+                <div
+                  key={
+                    check?.id ||
+                    check?.rule_code ||
+                    check?.name ||
+                    index
+                  }
+                  className={`border rounded-xl p-4 ${classes.container}`}
+                >
+
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+
+                    <div className="flex gap-3">
+
+                      {status === "COMPLIANT" ? (
+
+                        <CheckCircle2
+                          size={21}
+                          className={`${classes.icon} mt-0.5 shrink-0`}
+                        />
+
+                      ) : status === "REVIEW" ? (
+
+                        <ShieldCheck
+                          size={21}
+                          className={`${classes.icon} mt-0.5 shrink-0`}
+                        />
+
+                      ) : (
+
+                        <AlertTriangle
+                          size={21}
+                          className={`${classes.icon} mt-0.5 shrink-0`}
+                        />
+
+                      )}
 
 
-                        {/* Icon */}
+                      <div>
 
-                        {[
-                          "PASS",
-                          "PASSED",
-                          "COMPLIANT",
-                        ].includes(status) ? (
+                        <h3 className="font-semibold text-slate-900">
+                          {getRuleName(check)}
+                        </h3>
 
-                          <CheckCircle2
-                            size={21}
-                            className={`${classes.icon} mt-0.5 shrink-0`}
-                          />
 
-                        ) : [
+                        <p className="text-sm text-slate-600 mt-1">
 
-                          "PARTIAL",
-                          "UNCERTAIN",
-                          "NEEDS REVIEW",
-                          "REQUIRES_ADDITIONAL_IMAGE",
-                          "REVIEW",
+                          {checkValue !== null &&
+                          checkValue !== undefined &&
+                          String(checkValue).trim() !== ""
 
-                        ].includes(status) ? (
+                            ? `Detected value: ${checkValue}`
 
-                          <ShieldCheck
-                            size={21}
-                            className={`${classes.icon} mt-0.5 shrink-0`}
-                          />
+                            : "No value was detected for this declaration."}
 
-                        ) : (
+                        </p>
 
-                          <AlertTriangle
-                            size={21}
-                            className={`${classes.icon} mt-0.5 shrink-0`}
-                          />
+
+                        {check?.source_text && (
+
+                          <p className="text-xs text-slate-500 mt-2">
+
+                            OCR evidence:{" "}
+
+                            {check.source_text}
+
+                          </p>
 
                         )}
 
 
-                        <div>
+                        {confidence && (
 
-                          <h3 className="font-semibold text-slate-900">
+                          <p className="text-xs text-slate-500 mt-2">
 
-                            {getRuleName(
-                              check
-                            )}
+                            OCR confidence:{" "}
 
-                          </h3>
-
-
-                          <p className="text-sm text-slate-600 mt-1">
-
-                            {checkValue !== null &&
-                            checkValue !== undefined &&
-                            String(
-                              checkValue
-                            ).trim() !== ""
-
-                              ? `Detected value: ${checkValue}`
-
-                              : "No value was detected for this declaration."}
+                            {confidence}
 
                           </p>
 
-
-                          {check?.source_text && (
-
-                            <p className="text-xs text-slate-500 mt-2">
-
-                              OCR evidence:{" "}
-
-                              {check.source_text}
-
-                            </p>
-
-                          )}
-
-
-                          {confidence && (
-
-                            <p className="text-xs text-slate-500 mt-2">
-
-                              OCR confidence:{" "}
-
-                              {confidence}
-
-                            </p>
-
-                          )}
-
-                        </div>
+                        )}
 
                       </div>
 
-
-                      {/* Status */}
-
-                      <span
-                        className={`self-start text-xs font-semibold px-3 py-1 rounded-full ${classes.badge}`}
-                      >
-
-                        {statusLabel}
-
-                      </span>
-
                     </div>
+
+
+                    <span
+                      className={`self-start text-xs font-semibold px-3 py-1 rounded-full ${classes.badge}`}
+                    >
+                      {statusLabel}
+                    </span>
 
                   </div>
 
-                );
-              }
-            )
+                </div>
+
+              );
+
+            })
 
           )}
 
@@ -1784,9 +1636,6 @@ function Report() {
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-
-          {/* Image */}
 
           <div className="min-h-64 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
 
@@ -1826,10 +1675,7 @@ function Report() {
           </div>
 
 
-          {/* Result */}
-
           <div className="space-y-4">
-
 
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
 
@@ -1838,12 +1684,17 @@ function Report() {
               </p>
 
               <p className="font-semibold text-slate-900 mt-2">
-                {finalStatus}
+
+                {finalStatus === "COMPLIANT"
+                  ? "COMPLIANT"
+                  : finalStatus === "VIOLATION"
+                  ? "NON-COMPLIANT"
+                  : "NEEDS REVIEW"}
+
               </p>
 
               <p className="text-sm text-slate-600 mt-1">
-                The result shown here is based on the compliance
-                analysis returned by NiyamDrishti.
+                The result shown here is based on the compliance analysis stored for this inspection.
               </p>
 
             </div>
@@ -1900,7 +1751,7 @@ function Report() {
             </h2>
 
             <p className="text-sm text-slate-500">
-              Current inspection information
+              Stored inspection information
             </p>
 
           </div>
@@ -1912,9 +1763,6 @@ function Report() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-
-            {/* Status */}
-
             <div>
 
               <p className="text-xs text-slate-400 uppercase">
@@ -1924,13 +1772,11 @@ function Report() {
               <p className="font-semibold text-slate-800 mt-1">
                 {inspection?.inspectionStatus ||
                   inspection?.status ||
-                  finalStatus}
+                  "Not recorded"}
               </p>
 
             </div>
 
-
-            {/* ID */}
 
             <div>
 
@@ -1945,8 +1791,6 @@ function Report() {
             </div>
 
 
-            {/* Type */}
-
             <div>
 
               <p className="text-xs text-slate-400 uppercase">
@@ -1954,8 +1798,10 @@ function Report() {
               </p>
 
               <p className="font-semibold text-slate-800 mt-1">
-                {inspection?.inspectionType ||
-                  "Physical"}
+                {formatInspectionType(
+                  inspection?.inspectionType ||
+                  inspection?.inspection_type
+                )}
               </p>
 
             </div>
@@ -1973,7 +1819,6 @@ function Report() {
 
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pb-8">
 
-
         <button
           onClick={() =>
             navigate("/new-inspection")
@@ -1986,11 +1831,8 @@ function Report() {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
 
-
           <button
-            onClick={() =>
-              window.print()
-            }
+            onClick={handlePrint}
             className="flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
 
