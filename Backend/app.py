@@ -46,8 +46,11 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # Local development
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+
+        # Previous Render frontend
         "https://niyamdrishti-4xt9.onrender.com",
     ],
     allow_credentials=True,
@@ -183,6 +186,7 @@ async def analyze_label(
             mime_type=file.content_type
         )
 
+
         # ----------------------------------------------------
         # Add database inspection information
         # ----------------------------------------------------
@@ -295,7 +299,9 @@ async def analyze_multiple_labels(
             )
 
 
+            # ------------------------------------------------
             # OCR
+            # ------------------------------------------------
 
             ocr_result = (
                 ocr_engine.extract_to_json(
@@ -309,7 +315,9 @@ async def analyze_multiple_labels(
             )
 
 
+            # ------------------------------------------------
             # Combine detections
+            # ------------------------------------------------
 
             for detection in (
                 ocr_result.get(
@@ -443,9 +451,9 @@ async def analyze_multiple_labels(
 # Reports
 # History
 # Dashboard
+# Analytics
 #
-# This is what makes every completed inspection appear
-# in the frontend instead of using hardcoded/mock data.
+# All inspection data comes directly from PostgreSQL.
 # ============================================================
 
 @app.get("/inspections")
@@ -943,7 +951,8 @@ def get_inspection(
                 (
                     inspection.created_at.isoformat()
 
-                    if inspection.created_at
+                    if
+                    inspection.created_at
 
                     else None
                 ),
@@ -953,7 +962,8 @@ def get_inspection(
                 (
                     inspection.completed_at.isoformat()
 
-                    if inspection.completed_at
+                    if
+                    inspection.completed_at
 
                     else None
                 )
@@ -976,7 +986,39 @@ def get_inspection(
 # DASHBOARD STATISTICS
 # ============================================================
 #
-# Used by Dashboard / Analytics / Reports summary cards.
+# SINGLE SOURCE OF TRUTH
+#
+# Dashboard, Analytics and Reports should all ultimately
+# represent the same PostgreSQL inspection data.
+#
+# Status normalization:
+#
+# COMPLIANT
+#   PASS
+#   PASSED
+#   COMPLIANT
+#   VERIFIED_COMPLIANT
+#   COMPLIANT_WITH_ALL_CHECKS
+#
+# VIOLATION
+#   VIOLATION
+#   VIOLATIONS
+#   FAILED
+#   FAIL
+#   NON_COMPLIANT
+#   NON-COMPLIANT
+#
+# REVIEW
+#   PARTIAL
+#   UNCERTAIN
+#   REQUIRES_ADDITIONAL_IMAGE
+#   REVIEW
+#   NEEDS_REVIEW
+#   Any unknown / missing status
+#
+# Compliance percentage:
+#   Average of stored Inspection.compliance_percentage values.
+#
 # ============================================================
 
 @app.get("/dashboard/stats")
@@ -985,111 +1027,211 @@ def get_dashboard_stats(
 ):
 
     # --------------------------------------------------------
-    # Total inspections
+    # Get all inspections from PostgreSQL
+    # --------------------------------------------------------
+    #
+    # We intentionally use the same Inspection records that
+    # /inspections and Analytics use.
+    #
+    # This avoids having different classification logic
+    # in different endpoints.
     # --------------------------------------------------------
 
-    total = (
+    inspections = (
 
-        db.query(
-            func.count(Inspection.id)
+        db.query(Inspection)
+
+        .order_by(
+            Inspection.created_at.asc()
         )
 
-        .scalar()
-
-        or 0
+        .all()
 
     )
 
 
     # --------------------------------------------------------
-    # Compliant
+    # Total
     # --------------------------------------------------------
 
-    compliant = (
-
-        db.query(
-            func.count(Inspection.id)
-        )
-
-        .filter(
-            Inspection.overall_status
-            == "COMPLIANT"
-        )
-
-        .scalar()
-
-        or 0
-
-    )
+    total = len(inspections)
 
 
     # --------------------------------------------------------
-    # Non-compliant / violations
+    # Canonical status groups
     # --------------------------------------------------------
 
-    non_compliant = (
+    compliant_statuses = {
 
-        db.query(
-            func.count(Inspection.id)
-        )
+        "PASS",
+        "PASSED",
+        "COMPLIANT",
+        "VERIFIED_COMPLIANT",
+        "COMPLIANT_WITH_ALL_CHECKS"
 
-        .filter(
+    }
 
-            Inspection.overall_status.in_([
 
-                "NON-COMPLIANT",
+    violation_statuses = {
 
-                "VIOLATION",
+        "VIOLATION",
+        "VIOLATIONS",
+        "FAILED",
+        "FAIL",
+        "NON_COMPLIANT",
+        "NON-COMPLIANT"
 
-                "FAILED",
+    }
 
-                "FAIL"
 
-            ])
+    review_statuses = {
 
-        )
+        "PARTIAL",
+        "UNCERTAIN",
+        "REQUIRES_ADDITIONAL_IMAGE",
+        "REVIEW",
+        "NEEDS_REVIEW"
 
-        .scalar()
-
-        or 0
-
-    )
+    }
 
 
     # --------------------------------------------------------
-    # Needs review
+    # Counters
     # --------------------------------------------------------
 
-    review = (
+    compliant = 0
 
-        db.query(
-            func.count(Inspection.id)
+    potential_violations = 0
+
+    needs_review = 0
+
+
+    # --------------------------------------------------------
+    # Compliance percentage values
+    # --------------------------------------------------------
+
+    compliance_values = []
+
+
+    # --------------------------------------------------------
+    # Classify every inspection
+    # --------------------------------------------------------
+
+    for inspection in inspections:
+
+        # -----------------------------------------------
+        # Normalize status
+        # -----------------------------------------------
+
+        raw_status = inspection.overall_status
+
+        normalized_status = (
+
+            str(raw_status)
+            .strip()
+            .upper()
+            .replace(" ", "_")
+
+            if raw_status is not None
+
+            else ""
+
         )
 
-        .filter(
 
-            Inspection.overall_status.in_([
+        # -----------------------------------------------
+        # Compliant
+        # -----------------------------------------------
 
-                "PARTIAL",
+        if normalized_status in compliant_statuses:
 
-                "UNCERTAIN",
+            compliant += 1
 
-                "REQUIRES_ADDITIONAL_IMAGE",
 
-                "REVIEW",
+        # -----------------------------------------------
+        # Violation
+        # -----------------------------------------------
 
-                "NEEDS_REVIEW"
+        elif normalized_status in violation_statuses:
 
-            ])
+            potential_violations += 1
+
+
+        # -----------------------------------------------
+        # Review
+        # -----------------------------------------------
+
+        elif normalized_status in review_statuses:
+
+            needs_review += 1
+
+
+        # -----------------------------------------------
+        # Unknown / missing status
+        #
+        # Analytics currently treats unknown statuses
+        # as REVIEW, so the backend does the same.
+        # -----------------------------------------------
+
+        else:
+
+            needs_review += 1
+
+
+        # -----------------------------------------------
+        # Stored compliance percentage
+        # -----------------------------------------------
+
+        if inspection.compliance_percentage is not None:
+
+            compliance_values.append(
+
+                float(
+                    inspection.compliance_percentage
+                )
+
+            )
+
+
+    # --------------------------------------------------------
+    # Average compliance percentage
+    # --------------------------------------------------------
+    #
+    # This matches the current Analytics.jsx approach:
+    #
+    # average of each inspection's stored
+    # compliance_percentage.
+    #
+    # It is NOT:
+    #
+    # compliant / total * 100
+    #
+    # because that would measure "percentage of inspections
+    # that are fully compliant", which is a different metric.
+    # --------------------------------------------------------
+
+    if compliance_values:
+
+        compliance_percentage = (
+
+            sum(compliance_values)
+            / len(compliance_values)
 
         )
 
-        .scalar()
+        compliance_percentage = round(
+            compliance_percentage,
+            1
+        )
 
-        or 0
+    else:
 
-    )
+        compliance_percentage = 0.0
 
+
+    # --------------------------------------------------------
+    # Return canonical dashboard statistics
+    # --------------------------------------------------------
 
     return {
 
@@ -1100,10 +1242,13 @@ def get_dashboard_stats(
             compliant,
 
         "needs_review":
-            review,
+            needs_review,
 
         "potential_violations":
-            non_compliant
+            potential_violations,
+
+        "compliance_percentage":
+            compliance_percentage
 
     }
 
