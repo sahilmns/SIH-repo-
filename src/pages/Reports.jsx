@@ -37,7 +37,6 @@ function normalizeStatus(inspection) {
     .toUpperCase()
     .replace(/[-\s]+/g, "_");
 
-
   if (
     [
       "COMPLIANT",
@@ -50,7 +49,6 @@ function normalizeStatus(inspection) {
     return "compliant";
   }
 
-
   if (
     [
       "NON_COMPLIANT",
@@ -62,7 +60,6 @@ function normalizeStatus(inspection) {
   ) {
     return "potential_violation";
   }
-
 
   return "needs_review";
 }
@@ -102,14 +99,11 @@ function formatDate(value) {
     return "—";
   }
 
-
   const date = new Date(value);
-
 
   if (Number.isNaN(date.getTime())) {
     return String(value);
   }
-
 
   return date.toLocaleDateString(
     "en-IN",
@@ -129,7 +123,6 @@ function formatDate(value) {
 function Reports() {
   const navigate = useNavigate();
 
-
   const [reports, setReports] = useState([]);
 
   const [searchTerm, setSearchTerm] =
@@ -145,20 +138,18 @@ function Reports() {
     useState("");
 
 
-// ==========================================================
-// LOAD REAL INSPECTIONS
-// ==========================================================
+  // ==========================================================
+  // LOAD REAL INSPECTIONS
+  // ==========================================================
 
   const loadReports = async () => {
     try {
       setLoading(true);
       setError("");
 
-
       const response = await fetch(
         `${API_URL}/inspections`
       );
-
 
       if (!response.ok) {
         throw new Error(
@@ -166,10 +157,8 @@ function Reports() {
         );
       }
 
-
       const data =
         await response.json();
-
 
       const inspections =
         Array.isArray(data)
@@ -177,7 +166,6 @@ function Reports() {
           : Array.isArray(data?.inspections)
             ? data.inspections
             : [];
-
 
       setReports(inspections);
 
@@ -187,7 +175,6 @@ function Reports() {
         "NiyamDrishti reports error:",
         err
       );
-
 
       setError(
         err?.message ||
@@ -213,9 +200,9 @@ function Reports() {
   }, []);
 
 
-// ==========================================================
-// NORMALIZE DATABASE DATA FOR UI
-// ==========================================================
+  // ==========================================================
+  // NORMALIZE DATABASE DATA FOR UI
+  // ==========================================================
 
   const normalizedReports =
     useMemo(() => {
@@ -228,7 +215,6 @@ function Reports() {
               inspection?.compliance_percentage
             );
 
-
           return {
             ...inspection,
 
@@ -239,7 +225,6 @@ function Reports() {
             databaseId:
               inspection?.id,
 
-
             // ------------------------------------------------
             // NORMALIZED UI STATUS
             // ------------------------------------------------
@@ -249,7 +234,6 @@ function Reports() {
                 inspection
               ),
 
-
             // ------------------------------------------------
             // DISPLAY INSPECTION CODE
             // ------------------------------------------------
@@ -258,7 +242,6 @@ function Reports() {
               inspection?.inspection_code ||
               inspection?.id ||
               "—",
-
 
             // ------------------------------------------------
             // PRODUCT INFORMATION
@@ -276,7 +259,6 @@ function Reports() {
               inspection?.category ||
               "—",
 
-
             // ------------------------------------------------
             // DATE
             // ------------------------------------------------
@@ -285,7 +267,6 @@ function Reports() {
               inspection?.created_at ||
               inspection?.completed_at ||
               null,
-
 
             // ------------------------------------------------
             // REAL COMPLIANCE SCORE
@@ -304,9 +285,9 @@ function Reports() {
     }, [reports]);
 
 
-// ==========================================================
-// FILTER REPORTS
-// ==========================================================
+  // ==========================================================
+  // FILTER REPORTS
+  // ==========================================================
 
   const filteredReports =
     useMemo(() => {
@@ -315,7 +296,6 @@ function Reports() {
         searchTerm
           .toLowerCase()
           .trim();
-
 
       return normalizedReports.filter(
         (report) => {
@@ -340,12 +320,10 @@ function Reports() {
               .toLowerCase()
               .includes(search);
 
-
           const matchesStatus =
             statusFilter === "all" ||
             report.uiStatus ===
               statusFilter;
-
 
           return (
             matchesSearch &&
@@ -361,16 +339,12 @@ function Reports() {
     ]);
 
 
-// ==========================================================
-// SUMMARY COUNTS
-//
-// These are calculated from the same database records
-// displayed in the table.
-// ==========================================================
+  // ==========================================================
+  // SUMMARY COUNTS
+  // ==========================================================
 
   const totalReports =
     normalizedReports.length;
-
 
   const compliantReports =
     normalizedReports.filter(
@@ -378,7 +352,6 @@ function Reports() {
         report.uiStatus ===
         "compliant"
     ).length;
-
 
   const attentionRequired =
     normalizedReports.filter(
@@ -390,9 +363,9 @@ function Reports() {
     ).length;
 
 
-// ==========================================================
-// VIEW REPORT
-// ==========================================================
+  // ==========================================================
+  // VIEW REPORT
+  // ==========================================================
 
   const handleViewReport =
     (report) => {
@@ -406,7 +379,6 @@ function Reports() {
         return;
       }
 
-
       navigate(
         `/report?id=${encodeURIComponent(
           report.databaseId
@@ -415,32 +387,44 @@ function Reports() {
     };
 
 
-// ==========================================================
-// DOWNLOAD
-// ==========================================================
+  // ==========================================================
+  // DOWNLOAD REPORT
+  //
+  // Uses the EXACT SAME Report.jsx page.
+  // The "print=true" parameter tells Report.jsx
+  // to automatically open the browser print dialog.
+  // ==========================================================
 
   const handleDownload =
     (report) => {
 
-      /*
-       * The actual printable/PDF report endpoint
-       * will be connected once Report.jsx/backend
-       * report generation is finalized.
-       */
+      if (
+        report?.databaseId ===
+        undefined ||
+        report?.databaseId ===
+        null
+      ) {
+        alert(
+          "This inspection does not have a valid database ID."
+        );
 
-      alert(
-        `PDF download for ${report.displayId} will be connected next.`
+        return;
+      }
+
+      navigate(
+        `/report?id=${encodeURIComponent(
+          report.databaseId
+        )}&print=true`
       );
     };
 
 
-// ==========================================================
-// RENDER
-// ==========================================================
+  // ==========================================================
+  // RENDER
+  // ==========================================================
 
   return (
     <main className="p-8 bg-[#F6F8FC] min-h-[calc(100vh-80px)]">
-
 
       {/* ======================================================
           HEADER
@@ -471,11 +455,9 @@ function Reports() {
 
             </div>
 
-
             <h1 className="text-3xl font-bold text-slate-900">
               Reports
             </h1>
-
 
             <p className="text-slate-500 mt-2">
               View, search, and manage generated inspection reports.
@@ -610,7 +592,6 @@ function Reports() {
                    gap-6
                    mb-8"
       >
-
 
         {/* Total */}
 
@@ -1008,7 +989,6 @@ function Reports() {
                          divide-slate-100"
             >
 
-
               {/* =================================================
                   LOADING
               ================================================= */}
@@ -1056,10 +1036,8 @@ function Reports() {
                       ] ||
                       statusConfig.needs_review;
 
-
                     const StatusIcon =
                       status.icon;
-
 
                     return (
                       <tr
@@ -1227,12 +1205,19 @@ function Reports() {
                                   report
                                 )
                               }
+                              disabled={
+                                report.databaseId ===
+                                undefined ||
+                                report.databaseId ===
+                                null
+                              }
                               className="p-2
                                          rounded-lg
                                          text-slate-500
                                          hover:text-blue-600
                                          hover:bg-blue-50
-                                         transition-all"
+                                         transition-all
+                                         disabled:opacity-40"
                               title="Download Report"
                             >
 
