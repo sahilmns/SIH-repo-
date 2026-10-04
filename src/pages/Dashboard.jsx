@@ -11,7 +11,6 @@ import {
   FileSearch,
   Bell,
   Search,
-  Scale,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -172,6 +171,9 @@ function Dashboard() {
 
   /* =========================================================
      REAL DASHBOARD STATISTICS
+     
+     All values come directly from the FastAPI backend,
+     which reads the PostgreSQL / Neon database.
   ========================================================== */
 
   const [dashboardStats, setDashboardStats] = useState({
@@ -179,6 +181,7 @@ function Dashboard() {
     compliant: 0,
     needs_review: 0,
     potential_violations: 0,
+    compliance_percentage: 0,
   });
 
   const [statsLoading, setStatsLoading] = useState(true);
@@ -223,6 +226,16 @@ function Dashboard() {
 
           potential_violations:
             Number(data.potential_violations) || 0,
+
+          /* ---------------------------------------------
+             IMPORTANT:
+             Use the compliance percentage calculated by
+             the backend instead of calculating
+             compliant / total on the frontend.
+          --------------------------------------------- */
+
+          compliance_percentage:
+            Number(data.compliance_percentage) || 0,
 
         });
 
@@ -306,17 +319,19 @@ function Dashboard() {
 
 
   /* =========================================================
-     COMPLIANCE PERCENTAGE
+     BACKEND COMPLIANCE PERCENTAGE
+     
+     This is intentionally NOT calculated using:
+     
+     compliant / total_inspections
+     
+     The backend calculates the average of the stored
+     inspection compliance percentages, which matches
+     the Analytics definition.
   ========================================================== */
 
   const compliancePercentage =
-    dashboardStats.total_inspections > 0
-      ? (
-          (dashboardStats.compliant /
-            dashboardStats.total_inspections) *
-          100
-        ).toFixed(1)
-      : "0.0";
+    Number(dashboardStats.compliance_percentage || 0).toFixed(1);
 
 
   return (
