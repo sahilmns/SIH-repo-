@@ -72,6 +72,15 @@ function Analytics() {
   const [databaseInspections, setDatabaseInspections] =
     useState([]);
 
+  const [dashboardStats, setDashboardStats] =
+    useState({
+      total_inspections: 0,
+      compliant: 0,
+      needs_review: 0,
+      potential_violations: 0,
+      compliance_rate: 0,
+    });
+
   const [ruleResults, setRuleResults] =
     useState([]);
 
@@ -95,7 +104,54 @@ function Analytics() {
         setError("");
 
         // ----------------------------------------------------
+        // Fetch dashboard statistics
+        //
+        // IMPORTANT:
+        // Dashboard and Analytics now use the exact same
+        // backend statistics endpoint. This prevents the
+        // two pages from calculating different totals/statuses.
+        // ----------------------------------------------------
+
+        const statsResponse = await fetch(
+          `${API_URL}/dashboard/stats`
+        );
+
+        if (!statsResponse.ok) {
+          throw new Error(
+            `Failed to fetch dashboard statistics (${statsResponse.status})`
+          );
+        }
+
+        const statsData = await statsResponse.json();
+
+        if (cancelled) return;
+
+        setDashboardStats({
+          total_inspections:
+            Number(statsData?.total_inspections) || 0,
+
+          compliant:
+            Number(statsData?.compliant) || 0,
+
+          needs_review:
+            Number(statsData?.needs_review) || 0,
+
+          potential_violations:
+            Number(statsData?.potential_violations) || 0,
+
+          compliance_rate:
+            Number(
+              statsData?.compliance_rate ??
+              statsData?.compliance_percentage
+            ) || 0,
+        });
+
+        // ----------------------------------------------------
         // Fetch all inspections
+        //
+        // Used for monthly trend data and inspection-level
+        // timestamps. Summary cards do NOT recalculate these
+        // values independently.
         // ----------------------------------------------------
 
         const response = await fetch(
@@ -232,89 +288,28 @@ function Analytics() {
   const analyticsData = useMemo(() => {
 
     // --------------------------------------------------------
-    // STATUS COUNTS
-    // --------------------------------------------------------
-
-    let realCompliant = 0;
-    let realReview = 0;
-    let realViolations = 0;
-
-
-    databaseInspections.forEach((inspection) => {
-
-      const status = normalizeStatus(
-        inspection?.overall_status ||
-        inspection?.status
-      );
-
-
-      if (status === "COMPLIANT") {
-        realCompliant += 1;
-
-      } else if (status === "VIOLATION") {
-        realViolations += 1;
-
-      } else {
-        realReview += 1;
-      }
-
-    });
-
-
-    // --------------------------------------------------------
-    // TOTAL INSPECTIONS
+    // SUMMARY STATISTICS
+    //
+    // These values come from /dashboard/stats so Dashboard
+    // and Analytics always display the same database truth.
     // --------------------------------------------------------
 
     const totalInspections =
-      databaseInspections.length;
-
+      Number(dashboardStats?.total_inspections) || 0;
 
     const compliant =
-      realCompliant;
+      Number(dashboardStats?.compliant) || 0;
 
     const potentialViolations =
-      realViolations;
+      Number(dashboardStats?.potential_violations) || 0;
 
     const needsReview =
-      realReview;
-
-
-    // --------------------------------------------------------
-    // COMPLIANCE RATE
-    //
-    // Uses the actual compliance_percentage stored against
-    // each inspection in the database.
-    // --------------------------------------------------------
-
-    const validComplianceValues =
-      databaseInspections
-        .map((inspection) => {
-          const value = Number(
-            inspection?.compliance_percentage
-          );
-
-          return Number.isFinite(value)
-            ? value
-            : null;
-        })
-        .filter(
-          (value) => value !== null
-        );
-
+      Number(dashboardStats?.needs_review) || 0;
 
     const complianceRate =
-      validComplianceValues.length > 0
-        ? Number(
-            (
-              validComplianceValues.reduce(
-                (sum, value) =>
-                  sum + value,
-                0
-              ) /
-              validComplianceValues.length
-            ).toFixed(1)
-          )
-        : 0;
+      Number(
+        dashboardStats?.compliance_rate
+      ) || 0;
 
 
     // --------------------------------------------------------
@@ -487,6 +482,7 @@ function Analytics() {
   }, [
     databaseInspections,
     ruleResults,
+    dashboardStats,
   ]);
 
 
@@ -849,7 +845,10 @@ function Analytics() {
 
           ) : (
 
-            <div className="h-64 flex items-end justify-between gap-4 px-2">
+            <div
+              className="h-64 flex items-end justify-center
+                         gap-10 px-4 overflow-x-auto"
+            >
 
               {monthlyInspections.map((item) => {
 
@@ -860,21 +859,20 @@ function Analytics() {
                       100
                     : 0;
 
-
                 return (
                   <div
                     key={item.key}
-                    className="flex-1 h-full flex flex-col
-                               items-center justify-end gap-3"
+                    className="h-full w-20 shrink-0
+                               flex flex-col items-center
+                               justify-end gap-3"
                   >
 
                     <span className="text-xs font-semibold text-slate-600">
                       {item.inspections}
                     </span>
 
-
                     <div
-                      className="w-full max-w-10
+                      className="w-14
                                  bg-blue-500
                                  rounded-t-lg
                                  hover:bg-blue-600
@@ -887,7 +885,6 @@ function Analytics() {
                       }}
                       title={`${item.inspections} inspections`}
                     ></div>
-
 
                     <span className="text-xs text-slate-500">
                       {item.label}
@@ -1195,7 +1192,8 @@ function Analytics() {
 
           <p className="text-xs text-slate-400">
             Analytics summary is based on{" "}
-            {databaseInspections.length} live inspections.
+            {dashboardStats.total_inspections} live inspections
+            from the database.
           </p>
 
         )}
