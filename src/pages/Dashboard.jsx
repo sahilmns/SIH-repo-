@@ -181,7 +181,7 @@ function Dashboard() {
     compliant: 0,
     needs_review: 0,
     potential_violations: 0,
-    compliance_percentage: 0,
+    compliance_rate: 0,
   });
 
   const [statsLoading, setStatsLoading] = useState(true);
@@ -234,8 +234,8 @@ function Dashboard() {
              compliant / total on the frontend.
           --------------------------------------------- */
 
-          compliance_percentage:
-            Number(data.compliance_percentage) || 0,
+          compliance_rate:
+            Number(data.compliance_rate ?? data.compliance_percentage) || 0,
 
         });
 
@@ -331,7 +331,7 @@ function Dashboard() {
   ========================================================== */
 
   const compliancePercentage =
-    Number(dashboardStats.compliance_percentage || 0).toFixed(1);
+    Number(dashboardStats.compliance_rate || 0).toFixed(1);
 
 
   return (
@@ -982,7 +982,7 @@ function Dashboard() {
             </div>
 
 
-            {/* COMPLIANT */}
+            {/* COMPLIANCE RATE */}
 
             <div
               className="bg-white
@@ -1004,7 +1004,7 @@ function Dashboard() {
                                text-slate-500
                                font-semibold"
                   >
-                    Verified Compliant
+                    Compliance Rate
                   </p>
 
                   <p
@@ -1016,7 +1016,7 @@ function Dashboard() {
                   >
                     {statsLoading
                       ? "—"
-                      : dashboardStats.compliant}
+                      : `${compliancePercentage}%`}
                   </p>
 
                   <p
@@ -1024,9 +1024,7 @@ function Dashboard() {
                                text-green-600
                                mt-1"
                   >
-                    {statsLoading
-                      ? "—"
-                      : `${compliancePercentage}%`}
+                    Average compliance score
                   </p>
 
                 </div>
