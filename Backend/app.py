@@ -979,6 +979,14 @@ def get_inspection(
 # Used by Dashboard / Analytics / Reports summary cards.
 # ============================================================
 
+# ============================================================
+# DASHBOARD STATISTICS
+# ============================================================
+#
+# Used by Dashboard / Analytics / Reports summary cards.
+# All values come directly from PostgreSQL.
+# ============================================================
+
 @app.get("/dashboard/stats")
 def get_dashboard_stats(
     db: Session = Depends(get_db)
@@ -989,123 +997,158 @@ def get_dashboard_stats(
     # --------------------------------------------------------
 
     total = (
-
         db.query(
             func.count(Inspection.id)
         )
-
         .scalar()
-
         or 0
     )
 
+    # --------------------------------------------------------
+    # Normalize overall status
+    #
+    # Handles values such as:
+    # COMPLIANT
+    # NON-COMPLIANT
+    # VIOLATION
+    # FAILED
+    # PARTIAL
+    # etc.
+    # --------------------------------------------------------
+
+    normalized_status = func.upper(
+        func.replace(
+            func.coalesce(
+                Inspection.overall_status,
+                ""
+            ),
+            "-",
+            "_"
+        )
+    )
 
     # --------------------------------------------------------
     # Compliant
     # --------------------------------------------------------
 
     compliant = (
-
         db.query(
             func.count(Inspection.id)
         )
-
         .filter(
-            Inspection.overall_status
-            == "COMPLIANT"
+            normalized_status.in_([
+                "COMPLIANT",
+                "PASS",
+                "PASSED",
+                "VERIFIED_COMPLIANT",
+                "COMPLIANT_WITH_ALL_CHECKS",
+            ])
         )
-
         .scalar()
-
         or 0
-
     )
-
 
     # --------------------------------------------------------
     # Non-compliant / violations
     # --------------------------------------------------------
 
     non_compliant = (
-
         db.query(
             func.count(Inspection.id)
         )
-
         .filter(
-
-            Inspection.overall_status.in_([
-
-                "NON-COMPLIANT",
-
+            normalized_status.in_([
+                "NON_COMPLIANT",
                 "VIOLATION",
-
+                "VIOLATIONS",
                 "FAILED",
-
-                "FAIL"
-
+                "FAIL",
             ])
-
         )
-
         .scalar()
-
         or 0
-
     )
-
 
     # --------------------------------------------------------
     # Needs review
     # --------------------------------------------------------
 
     review = (
-
         db.query(
             func.count(Inspection.id)
         )
-
         .filter(
-
-            Inspection.overall_status.in_([
-
+            normalized_status.in_([
                 "PARTIAL",
-
                 "UNCERTAIN",
-
                 "REQUIRES_ADDITIONAL_IMAGE",
-
                 "REVIEW",
-
-                "NEEDS_REVIEW"
-
+                "NEEDS_REVIEW",
             ])
-
         )
-
         .scalar()
-
         or 0
-
     )
 
+    # --------------------------------------------------------
+    # Average compliance score
+    #
+    # IMPORTANT:
+    # This uses the actual compliance_percentage stored for
+    # every inspection in PostgreSQL.
+    # --------------------------------------------------------
+
+    average_compliance = (
+        db.query(
+            func.avg(
+                Inspection.compliance_percentage
+            )
+        )
+        .filter(
+            Inspection.compliance_percentage.isnot(None)
+        )
+        .scalar()
+    )
+
+    compliance_rate = round(
+        float(average_compliance or 0),
+        1
+    )
+
+    # --------------------------------------------------------
+    # Latest inspection timestamp
+    # --------------------------------------------------------
+
+    latest_created_at = (
+        db.query(
+            func.max(
+                Inspection.created_at
+            )
+        )
+        .scalar()
+    )
+
+    # --------------------------------------------------------
+    # Final response
+    # --------------------------------------------------------
 
     return {
+        "total_inspections": total,
 
-        "total_inspections":
-            total,
+        "compliant": compliant,
 
-        "compliant":
-            compliant,
+        "needs_review": review,
 
-        "needs_review":
-            review,
+        "potential_violations": non_compliant,
 
-        "potential_violations":
-            non_compliant
+        "compliance_rate": compliance_rate,
 
+        "last_updated": (
+            latest_created_at.isoformat()
+            if latest_created_at
+            else None
+        ),
     }
-
 
 # ============================================================
 # SERVE INSPECTION IMAGE
